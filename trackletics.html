@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#0a0a0a"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Trackletics"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <title>TRACKLETICS</title>
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Trackletics%22%2C%22short_name%22%3A%22Trackletics%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0a0a%22%2C%22theme_color%22%3A%22%230a0a0a%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage/svg%2Bxml%2C%253Csvg%2520xmlns%3D'http%3A//www.w3.org/2000/svg'%2520viewBox%3D'0%25200%252032%252032'%253E%253Crect%2520width%3D'32'%2520height%3D'32'%2520rx%3D'8'%2520fill%3D'%25238b5cf6'/%253E%253Ctext%2520x%3D'16'%2520y%3D'23'%2520text-anchor%3D'middle'%2520font-size%3D'20'%253E%25F0%259F%2592%25AA%253C/text%253E%253C/svg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image/svg%2Bxml%22%7D%5D%7D"/>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%238b5cf6'/><text x='90' y='130' text-anchor='middle' font-size='110'>💪</text></svg>"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; background: #0a0a0a; }
+    body { overflow: hidden; }
+    #root { overflow: hidden; padding-top: env(safe-area-inset-top); }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    
+    // ─── FOOD DATABASE (macro + micro per 100g) ───────────────────────────────────
+    // micro keys: fiber,sugar,sodium,calcium,iron,vitC,vitD,vitE,vitK,vitA,vitB12,magnesium,potassium,zinc,selenium,omega3,folates,phosphorus
+    const FOOD_DB = [
+      // ═══════════════ VIANDES & VOLAILLES ═══════════════
+      // rawCoeff = ratio poids cru→cuit (ex: 0.75 signifie 100g cru → 75g cuit, les macros /100g sont ceux du produit cuit)
+      {id:1,name:"Poulet (poitrine grillée)",cat:"Viandes & Volailles",emoji:"🍗",rawCoeff:0.75,p100:{cal:165,p:31,c:0,f:3.6,fiber:0,sugar:0,sodium:74,calcium:15,iron:1,vitC:0,vitD:0.1,vitE:0.3,vitK:0,vitA:0,vitB12:0.3,magnesium:29,potassium:256,zinc:1,selenium:27,omega3:0.1,folates:4,phosphorus:220}},
+      {id:2,name:"Poulet (cuisse, sans peau)",cat:"Viandes & Volailles",emoji:"🍗",rawCoeff:0.75,p100:{cal:215,p:24,c:0,f:13,fiber:0,sugar:0,sodium:83,calcium:12,iron:1.3,vitC:0,vitD:0.1,vitE:0.2,vitK:0,vitA:0,vitB12:0.3,magnesium:23,potassium:220,zinc:2.1,selenium:18,omega3:0.2,folates:6,phosphorus:175}},
+      {id:3,name:"Dinde (blanc)",cat:"Viandes & Volailles",emoji:"🍗",rawCoeff:0.75,p100:{cal:157,p:30,c:0,f:3.2,fiber:0,sugar:0,sodium:70,calcium:19,iron:1.4,vitC:0,vitD:0.1,vitE:0.1,vitK:0,vitA:0,vitB12:0.4,magnesium:28,potassium:298,zinc:2.1,selenium:22,omega3:0.1,folates:9,phosphorus:210}},
+      {id:4,name:"Bœuf (steak haché 5% MG)",cat:"Viandes & Volailles",emoji:"🥩",rawCoeff:0.76,p100:{cal:125,p:21,c:0,f:5,fiber:0,sugar:0,sodium:70,calcium:18,iron:2.6,vitC:0,vitD:0.1,vitE:0.1,vitK:0,vitA:0,vitB12:2.6,magnesium:22,potassium:318,zinc:4.5,selenium:14,omega3:0.1,folates:8,phosphorus:200}},
+      {id:5,name:"Bœuf (steak haché 15% MG)",cat:"Viandes & Volailles",emoji:"🥩",rawCoeff:0.76,p100:{cal:200,p:19,c:0,f:15,fiber:0,sugar:0,sodium:70,calcium:15,iron:2.4,vitC:0,vitD:0.1,vitE:0.1,vitK:0,vitA:0,vitB12:2.5,magnesium:20,potassium:280,zinc:4.2,selenium:13,omega3:0.2,folates:7,phosphorus:190}},
+      {id:6,name:"Bœuf (steak haché 20% MG)",cat:"Viandes & Volailles",emoji:"🥩",rawCoeff:0.76,p100:{cal:250,p:17,c:0,f:20,fiber:0,sugar:0,sodium:70,calcium:14,iron:2.2,vitC:0,vitD:0.1,vitE:0.1,vitK:0,vitA:0,vitB12:2.4,magnesium:18,potassium:250,zinc:4,selenium:12,omega3:0.3,folates:6,phosphorus:180}},
+      {id:7,name:"Bœuf (rumsteck maigre)",cat:"Viandes & Volailles",emoji:"🥩",rawCoeff:0.75,p100:{cal:130,p:21,c:0,f:5,fiber:0,sugar:0,sodium:55,calcium:8,iron:2.6,vitC:0,vitD:0.1,vitE:0.1,vitK:0,vitA:0,vitB12:2.5,magnesium:22,potassium:355,zinc:4.4,selenium:14,omega3:0.1,folates:8,phosphorus:200}},
+      {id:8,name:"Bœuf (entrecôte)",cat:"Viandes & Volailles",emoji:"🥩",rawCoeff:0.73,p100:{cal:271,p:17,c:0,f:22,fiber:0,sugar:0,sodium:54,calcium:11,iron:1.8,vitC:0,vitD:0.1,vitE:0.1,vitK:0,vitA:0,vitB12:2,magnesium:17,potassium:240,zinc:3.9,selenium:12,omega3:0.1,folates:5,phosphorus:165}},
+      {id:9,name:"Veau (escalope)",cat:"Viandes & Volailles",emoji:"🥩",rawCoeff:0.77,p100:{cal:109,p:19.1,c:0,f:3.4,fiber:0,sugar:0,sodium:80,calcium:12,iron:0.8,vitC:0,vitD:0.3,vitE:0.2,vitK:0,vitA:0,vitB12:1.2,magnesium:22,potassium:340,zinc:2.8,selenium:10,omega3:0.1,folates:10,phosphorus:195}},
+      {id:10,name:"Porc (filet maigre)",cat:"Viandes & Volailles",emoji:"🥩",rawCoeff:0.75,p100:{cal:143,p:22,c:0,f:5.9,fiber:0,sugar:0,sodium:62,calcium:7,iron:0.9,vitC:0.4,vitD:0.5,vitE:0.2,vitK:0,vitA:0,vitB12:0.7,magnesium:26,potassium:370,zinc:2.5,selenium:40,omega3:0.1,folates:5,phosphorus:220}},
+      {id:11,name:"Jambon blanc (cuit)",cat:"Viandes & Volailles",emoji:"🥩",p100:{cal:107,p:17,c:2,f:3.5,fiber:0,sugar:1.5,sodium:1200,calcium:12,iron:0.9,vitC:0,vitD:0.1,vitE:0.1,vitK:0,vitA:0,vitB12:0.5,magnesium:18,potassium:260,zinc:1.8,selenium:14,omega3:0.1,folates:3,phosphorus:160}},
+      {id:12,name:"Jambon de Bayonne",cat:"Viandes & Volailles",emoji:"🥩",p100:{cal:250,p:26,c:0,f:16,fiber:0,sugar:0,sodium:2500,calcium:14,iron:1.2,vitC:0,vitD:0.1,vitE:0.1,vitK:0,vitA:0,vitB12:0.8,magnesium:26,potassium:420,zinc:3,selenium:16,omega3:0.1,folates:4,phosphorus:240}},
+      {id:13,name:"Canard (sans peau)",cat:"Viandes & Volailles",emoji:"🦆",p100:{cal:201,p:23.5,c:0,f:11.2,fiber:0,sugar:0,sodium:74,calcium:12,iron:2.7,vitC:0,vitD:0.4,vitE:0.3,vitK:0,vitA:0,vitB12:0.5,magnesium:22,potassium:286,zinc:2.7,selenium:14,omega3:0.2,folates:11,phosphorus:200}},
+      {id:14,name:"Lapin",cat:"Viandes & Volailles",emoji:"🐇",p100:{cal:136,p:20.1,c:0,f:5.5,fiber:0,sugar:0,sodium:47,calcium:18,iron:1.6,vitC:0,vitD:0.4,vitE:0.5,vitK:0,vitA:0,vitB12:7,magnesium:26,potassium:296,zinc:1.8,selenium:12,omega3:0.4,folates:10,phosphorus:220}},
+      // ═══════════════ POISSONS & FRUITS DE MER ═══════════════
+      {id:15,name:"Saumon atlantique (grillé)",cat:"Poissons & Mer",emoji:"🐠",rawCoeff:0.80,p100:{cal:208,p:20,c:0,f:13,fiber:0,sugar:0,sodium:59,calcium:15,iron:0.8,vitC:3.9,vitD:11,vitE:3.5,vitK:0,vitA:12,vitB12:3.2,magnesium:29,potassium:490,zinc:0.6,selenium:36,omega3:2.3,folates:25,phosphorus:252}},
+      {id:16,name:"Saumon fumé",cat:"Poissons & Mer",emoji:"🐠",p100:{cal:157,p:20.1,c:0,f:8,fiber:0,sugar:0,sodium:2000,calcium:11,iron:0.9,vitC:0,vitD:10.7,vitE:2,vitK:0,vitA:20,vitB12:3,magnesium:22,potassium:330,zinc:0.5,selenium:30,omega3:1.6,folates:4,phosphorus:210}},
+      {id:17,name:"Thon en boîte (naturel)",cat:"Poissons & Mer",emoji:"🐟",p100:{cal:116,p:25.5,c:0,f:1,fiber:0,sugar:0,sodium:400,calcium:13,iron:1.3,vitC:0,vitD:3.7,vitE:1,vitK:0,vitA:8,vitB12:2.5,magnesium:35,potassium:300,zinc:0.9,selenium:90,omega3:0.3,folates:4,phosphorus:250}},
+      {id:18,name:"Cabillaud",cat:"Poissons & Mer",emoji:"🐟",rawCoeff:0.82,p100:{cal:82,p:18,c:0,f:0.7,fiber:0,sugar:0,sodium:78,calcium:16,iron:0.4,vitC:1,vitD:1.1,vitE:0.7,vitK:0,vitA:12,vitB12:1,magnesium:32,potassium:413,zinc:0.5,selenium:33,omega3:0.2,folates:8,phosphorus:203}},
+      {id:19,name:"Sardines (boîte huile)",cat:"Poissons & Mer",emoji:"🐟",p100:{cal:208,p:24.6,c:0,f:11.5,fiber:0,sugar:0,sodium:505,calcium:382,iron:2.9,vitC:0,vitD:4.8,vitE:2,vitK:0,vitA:32,vitB12:8.9,magnesium:39,potassium:397,zinc:1.3,selenium:52,omega3:1.5,folates:10,phosphorus:490}},
+      {id:20,name:"Maquereau grillé",cat:"Poissons & Mer",emoji:"🐟",rawCoeff:0.80,p100:{cal:205,p:18.6,c:0,f:13.9,fiber:0,sugar:0,sodium:90,calcium:12,iron:1.4,vitC:0.4,vitD:16.1,vitE:1.5,vitK:0,vitA:28,vitB12:8,magnesium:76,potassium:314,zinc:0.6,selenium:44,omega3:2.6,folates:1,phosphorus:217}},
+      {id:21,name:"Crevettes cuites",cat:"Poissons & Mer",emoji:"🍤",rawCoeff:0.78,p100:{cal:85,p:18,c:0,f:0.9,fiber:0,sugar:0,sodium:148,calcium:70,iron:0.5,vitC:2.2,vitD:0,vitE:1.3,vitK:0,vitA:54,vitB12:1.3,magnesium:34,potassium:220,zinc:1.1,selenium:38,omega3:0.3,folates:3,phosphorus:205}},
+      {id:22,name:"Moules cuites",cat:"Poissons & Mer",emoji:"🦪",rawCoeff:0.75,p100:{cal:86,p:11.9,c:3.7,f:2.2,fiber:0,sugar:0,sodium:286,calcium:28,iron:4,vitC:8,vitD:0.6,vitE:1,vitK:0,vitA:48,vitB12:12,magnesium:37,potassium:320,zinc:2.7,selenium:45,omega3:0.5,folates:42,phosphorus:197}},
+      {id:23,name:"Huîtres",cat:"Poissons & Mer",emoji:"🦪",p100:{cal:68,p:7.1,c:3.9,f:2.5,fiber:0,sugar:0,sodium:510,calcium:45,iron:6,vitC:3,vitD:0.3,vitE:0.9,vitK:0,vitA:24,vitB12:16,magnesium:47,potassium:156,zinc:16.6,selenium:63,omega3:0.7,folates:10,phosphorus:135}},
+      {id:24,name:"Lieu noir",cat:"Poissons & Mer",emoji:"🐟",rawCoeff:0.80,p100:{cal:90,p:18.9,c:0,f:1.3,fiber:0,sugar:0,sodium:79,calcium:42,iron:0.4,vitC:0,vitD:0.6,vitE:0.4,vitK:0,vitA:10,vitB12:1.5,magnesium:28,potassium:430,zinc:0.5,selenium:36,omega3:0.3,folates:6,phosphorus:220}},
+      {id:25,name:"Dorade",cat:"Poissons & Mer",emoji:"🐟",rawCoeff:0.80,p100:{cal:96,p:18.5,c:0,f:2.3,fiber:0,sugar:0,sodium:120,calcium:36,iron:0.6,vitC:0,vitD:2.5,vitE:0.8,vitK:0,vitA:14,vitB12:2,magnesium:28,potassium:327,zinc:0.5,selenium:30,omega3:0.5,folates:7,phosphorus:210}},
+      // ═══════════════ ŒUFS & LAITIERS ═══════════════
+      {id:26,name:"Œuf entier",cat:"Œufs & Laitiers",emoji:"🥚",p100:{cal:155,p:13,c:1.1,f:11,fiber:0,sugar:1.1,sodium:124,calcium:56,iron:1.8,vitC:0,vitD:2,vitE:1.1,vitK:0,vitA:149,vitB12:0.9,magnesium:12,potassium:138,zinc:1.3,selenium:30,omega3:0.1,folates:47,phosphorus:198}},
+      {id:27,name:"Blanc d'œuf",cat:"Œufs & Laitiers",emoji:"🥚",p100:{cal:52,p:11,c:0.7,f:0.2,fiber:0,sugar:0.7,sodium:166,calcium:7,iron:0.1,vitC:0,vitD:0,vitE:0,vitK:0,vitA:0,vitB12:0.1,magnesium:11,potassium:163,zinc:0.03,selenium:20,omega3:0,folates:4,phosphorus:15}},
+      {id:28,name:"Lait entier",cat:"Œufs & Laitiers",emoji:"🥛",p100:{cal:61,p:3.2,c:4.8,f:3.3,fiber:0,sugar:4.8,sodium:44,calcium:120,iron:0.1,vitC:0.9,vitD:0.1,vitE:0.1,vitK:0,vitA:46,vitB12:0.4,magnesium:11,potassium:150,zinc:0.4,selenium:2,omega3:0.1,folates:5,phosphorus:90}},
+      {id:29,name:"Lait demi-écrémé",cat:"Œufs & Laitiers",emoji:"🥛",p100:{cal:46,p:3.3,c:4.7,f:1.5,fiber:0,sugar:4.7,sodium:48,calcium:124,iron:0.1,vitC:0.9,vitD:0.1,vitE:0.1,vitK:0,vitA:20,vitB12:0.4,magnesium:11,potassium:156,zinc:0.4,selenium:2,omega3:0.04,folates:5,phosphorus:95}},
+      {id:30,name:"Yaourt grec nature",cat:"Œufs & Laitiers",emoji:"🥛",p100:{cal:97,p:9,c:3.6,f:5,fiber:0,sugar:3.6,sodium:36,calcium:110,iron:0.1,vitC:0.5,vitD:0.1,vitE:0.1,vitK:0,vitA:18,vitB12:0.5,magnesium:11,potassium:141,zinc:0.5,selenium:9,omega3:0.05,folates:7,phosphorus:100}},
+      {id:31,name:"Fromage blanc 0%",cat:"Œufs & Laitiers",emoji:"🧀",p100:{cal:48,p:8,c:4,f:0.1,fiber:0,sugar:4,sodium:55,calcium:95,iron:0.1,vitC:0,vitD:0,vitE:0,vitK:0,vitA:0,vitB12:0.3,magnesium:11,potassium:120,zinc:0.4,selenium:4,omega3:0,folates:10,phosphorus:105}},
+      {id:32,name:"Skyr nature",cat:"Œufs & Laitiers",emoji:"🥛",p100:{cal:65,p:11,c:4,f:0.2,fiber:0,sugar:4,sodium:53,calcium:135,iron:0,vitC:0,vitD:0,vitE:0,vitK:0,vitA:0,vitB12:0.5,magnesium:13,potassium:160,zinc:0.5,selenium:5,omega3:0,folates:8,phosphorus:120}},
+      {id:33,name:"Emmental",cat:"Œufs & Laitiers",emoji:"🧀",p100:{cal:382,p:29,c:0,f:29,fiber:0,sugar:0,sodium:450,calcium:1080,iron:0.3,vitC:0,vitD:0.5,vitE:0.4,vitK:2,vitA:270,vitB12:3.4,magnesium:45,potassium:98,zinc:4.3,selenium:14,omega3:0.7,folates:14,phosphorus:620}},
+      {id:34,name:"Parmesan",cat:"Œufs & Laitiers",emoji:"🧀",p100:{cal:431,p:38,c:4,f:29,fiber:0,sugar:0,sodium:1529,calcium:1275,iron:0.9,vitC:0,vitD:0.5,vitE:0.4,vitK:1,vitA:207,vitB12:2.3,magnesium:43,potassium:92,zinc:2.9,selenium:22,omega3:0.5,folates:8,phosphorus:694}},
+      {id:35,name:"Mozzarella",cat:"Œufs & Laitiers",emoji:"🧀",p100:{cal:280,p:18,c:3,f:22,fiber:0,sugar:3,sodium:373,calcium:515,iron:0.2,vitC:0,vitD:0.1,vitE:0.2,vitK:2,vitA:160,vitB12:2,magnesium:19,potassium:95,zinc:2.9,selenium:14,omega3:0.4,folates:7,phosphorus:354}},
+      {id:36,name:"Gruyère",cat:"Œufs & Laitiers",emoji:"🧀",p100:{cal:413,p:29.8,c:0,f:32.3,fiber:0,sugar:0,sodium:336,calcium:1011,iron:0.2,vitC:0,vitD:0.4,vitE:0.4,vitK:2,vitA:258,vitB12:3,magnesium:36,potassium:86,zinc:3.8,selenium:14,omega3:0.6,folates:10,phosphorus:605}},
+      {id:37,name:"Ricotta",cat:"Œufs & Laitiers",emoji:"🧀",p100:{cal:174,p:11.3,c:3,f:13,fiber:0,sugar:0.3,sodium:84,calcium:207,iron:0.4,vitC:0,vitD:0.2,vitE:0.1,vitK:0,vitA:124,vitB12:0.5,magnesium:11,potassium:105,zinc:1.2,selenium:14,omega3:0.3,folates:12,phosphorus:158}},
+      {id:38,name:"Saint-Marcellin",cat:"Œufs & Laitiers",emoji:"🧀",p100:{cal:279,p:14.5,c:0,f:24.2,fiber:0,sugar:0,sodium:1080,calcium:140,iron:0.05,vitC:0,vitD:0.2,vitE:0.2,vitK:2,vitA:192,vitB12:1,magnesium:12,potassium:180,zinc:0.5,selenium:5,omega3:0.5,folates:8,phosphorus:210}},
+      {id:39,name:"Cantal (pâte pressée)",cat:"Œufs & Laitiers",emoji:"🧀",p100:{cal:345,p:22,c:0.1,f:28.5,fiber:0,sugar:0,sodium:1000,calcium:850,iron:0.2,vitC:0,vitD:0.4,vitE:0.3,vitK:2,vitA:72,vitB12:2,magnesium:25,potassium:170,zinc:3,selenium:10,omega3:0.6,folates:10,phosphorus:500}},
+      {id:40,name:"Beurre doux",cat:"Œufs & Laitiers",emoji:"🧈",p100:{cal:717,p:0.9,c:0.1,f:81,fiber:0,sugar:0.1,sodium:11,calcium:24,iron:0.02,vitC:0,vitD:1.5,vitE:2.3,vitK:7,vitA:684,vitB12:0.1,magnesium:2,potassium:24,zinc:0.09,selenium:1,omega3:0.3,folates:3,phosphorus:24}},
+      {id:41,name:"Beurre demi-sel",cat:"Œufs & Laitiers",emoji:"🧈",p100:{cal:715,p:0.9,c:0.1,f:81,fiber:0,sugar:0.1,sodium:650,calcium:24,iron:0.02,vitC:0,vitD:1.4,vitE:2.2,vitK:7,vitA:670,vitB12:0.1,magnesium:2,potassium:24,zinc:0.09,selenium:1,omega3:0.3,folates:3,phosphorus:24}},
+      // ═══════════════ CÉRÉALES & FÉCULENTS ═══════════════
+      // rawCoeff = ratio poids sec→cuit (ex: 2.5 = 100g sec → 250g cuit)
+      {id:42,name:"Riz blanc cuit",cat:"Céréales & Féculents",emoji:"🍚",rawCoeff:2.5,p100:{cal:130,p:2.7,c:28,f:0.3,fiber:0.4,sugar:0,sodium:1,calcium:10,iron:0.2,vitC:0,vitD:0,vitE:0,vitK:0,vitA:0,vitB12:0,magnesium:12,potassium:35,zinc:0.5,selenium:7,omega3:0.01,folates:2,phosphorus:43}},
+      {id:43,name:"Riz basmati cuit",cat:"Céréales & Féculents",emoji:"🍚",rawCoeff:2.5,p100:{cal:121,p:2.5,c:25,f:0.3,fiber:0.4,sugar:0,sodium:1,calcium:4,iron:0.2,vitC:0,vitD:0,vitE:0,vitK:0,vitA:0,vitB12:0,magnesium:13,potassium:55,zinc:0.5,selenium:7,omega3:0.01,folates:2,phosphorus:50}},
+      {id:44,name:"Riz complet cuit",cat:"Céréales & Féculents",emoji:"🍚",rawCoeff:2.5,p100:{cal:111,p:2.6,c:23,f:0.9,fiber:1.8,sugar:0.4,sodium:5,calcium:10,iron:0.4,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:43,potassium:79,zinc:0.6,selenium:10,omega3:0.01,folates:4,phosphorus:83}},
+      {id:45,name:"Pâtes blanches cuites",cat:"Céréales & Féculents",emoji:"🍝",rawCoeff:2.3,p100:{cal:131,p:5,c:25,f:1.1,fiber:1.8,sugar:0.6,sodium:6,calcium:7,iron:0.5,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:18,potassium:45,zinc:0.5,selenium:26,omega3:0.01,folates:7,phosphorus:57}},
+      {id:46,name:"Pâtes complètes cuites",cat:"Céréales & Féculents",emoji:"🍝",rawCoeff:2.3,p100:{cal:124,p:5.3,c:23.2,f:1.3,fiber:3.5,sugar:0.6,sodium:6,calcium:21,iron:1.2,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:47,potassium:89,zinc:1,selenium:30,omega3:0.05,folates:12,phosphorus:110}},
+      {id:47,name:"Flocons d'avoine",cat:"Céréales & Féculents",emoji:"🌾",rawCoeff:2.5,p100:{cal:375,p:12,c:65,f:7,fiber:10,sugar:1,sodium:6,calcium:54,iron:4.7,vitC:0,vitD:0,vitE:0.4,vitK:0,vitA:0,vitB12:0,magnesium:138,potassium:362,zinc:3.6,selenium:28,omega3:0.1,folates:32,phosphorus:410}},
+      {id:48,name:"Son d'avoine",cat:"Céréales & Féculents",emoji:"🌾",p100:{cal:246,p:17.3,c:66,f:7,fiber:15.4,sugar:1.5,sodium:4,calcium:58,iron:5.4,vitC:0,vitD:0,vitE:0.6,vitK:0,vitA:0,vitB12:0,magnesium:235,potassium:566,zinc:3.1,selenium:45,omega3:0.1,folates:52,phosphorus:730}},
+      {id:49,name:"Quinoa (cuit)",cat:"Céréales & Féculents",emoji:"🌾",rawCoeff:2.8,p100:{cal:120,p:4.4,c:21,f:1.9,fiber:2.8,sugar:0.9,sodium:7,calcium:17,iron:1.5,vitC:0,vitD:0,vitE:0.6,vitK:0,vitA:0,vitB12:0,magnesium:64,potassium:172,zinc:1.1,selenium:5,omega3:0.2,folates:42,phosphorus:152}},
+      {id:50,name:"Boulgour (cuit)",cat:"Céréales & Féculents",emoji:"🌾",rawCoeff:2.5,p100:{cal:83,p:3,c:18,f:0.2,fiber:4.5,sugar:0.1,sodium:5,calcium:13,iron:0.9,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:27,potassium:57,zinc:0.6,selenium:1,omega3:0.03,folates:18,phosphorus:40}},
+      {id:51,name:"Millet (cuit)",cat:"Céréales & Féculents",emoji:"🌾",rawCoeff:2.5,p100:{cal:119,p:3.5,c:23,f:1,fiber:1.3,sugar:0.2,sodium:2,calcium:8,iron:0.6,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:33,potassium:119,zinc:0.6,selenium:2,omega3:0.05,folates:16,phosphorus:100}},
+      {id:52,name:"Semoule de blé dur (cuite)",cat:"Céréales & Féculents",emoji:"🌾",rawCoeff:2.5,p100:{cal:112,p:3.8,c:23,f:0.2,fiber:1,sugar:0.3,sodium:120,calcium:11,iron:0.4,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:12,potassium:57,zinc:0.3,selenium:26,omega3:0.01,folates:14,phosphorus:39}},
+      {id:53,name:"Patate douce (cuite)",cat:"Céréales & Féculents",emoji:"🍠",p100:{cal:90,p:2,c:21,f:0.1,fiber:3,sugar:4.2,sodium:36,calcium:30,iron:0.6,vitC:19.6,vitD:0,vitE:0.3,vitK:1.8,vitA:961,vitB12:0,magnesium:25,potassium:337,zinc:0.3,selenium:0.6,omega3:0.01,folates:6,phosphorus:47}},
+      {id:54,name:"Pomme de terre (cuite)",cat:"Céréales & Féculents",emoji:"🥔",p100:{cal:77,p:2,c:17,f:0.1,fiber:1.8,sugar:0.8,sodium:6,calcium:12,iron:0.3,vitC:7.4,vitD:0,vitE:0.1,vitK:1.6,vitA:0,vitB12:0,magnesium:20,potassium:421,zinc:0.3,selenium:0.4,omega3:0.01,folates:18,phosphorus:60}},
+      {id:55,name:"Pain blanc (baguette)",cat:"Céréales & Féculents",emoji:"🥖",p100:{cal:260,p:9.5,c:54,f:1.6,fiber:3.5,sugar:3,sodium:530,calcium:26,iron:1.1,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0.1,magnesium:25,potassium:151,zinc:0.7,selenium:20,omega3:0.03,folates:16.8,phosphorus:113}},
+      {id:56,name:"Pain complet",cat:"Céréales & Féculents",emoji:"🍞",p100:{cal:256,p:9.5,c:48,f:2.3,fiber:7,sugar:5,sodium:472,calcium:37,iron:2.2,vitC:0,vitD:0,vitE:0.3,vitK:0,vitA:0,vitB12:0.1,magnesium:67,potassium:324,zinc:1.8,selenium:26,omega3:0.2,folates:25,phosphorus:254}},
+      {id:57,name:"Pain de seigle",cat:"Céréales & Féculents",emoji:"🍞",p100:{cal:260,p:8.3,c:51.5,f:1,fiber:6.5,sugar:3,sodium:580,calcium:73,iron:2.5,vitC:0,vitD:0,vitE:0.3,vitK:0,vitA:0,vitB12:0,magnesium:40,potassium:195,zinc:1.8,selenium:18,omega3:0.2,folates:20,phosphorus:200}},
+      {id:58,name:"Pain aux céréales",cat:"Céréales & Féculents",emoji:"🍞",p100:{cal:262,p:9.6,c:46.9,f:3.2,fiber:5.2,sugar:4,sodium:500,calcium:40,iron:1.5,vitC:0,vitD:0,vitE:0.85,vitK:0,vitA:0,vitB12:0,magnesium:35,potassium:180,zinc:1.5,selenium:20,omega3:0.1,folates:20,phosphorus:180}},
+      {id:59,name:"Pain multigrains",cat:"Céréales & Féculents",emoji:"🍞",p100:{cal:265,p:13.4,c:43.3,f:4.2,fiber:7.4,sugar:6.4,sodium:480,calcium:50,iron:2,vitC:0,vitD:0,vitE:0.5,vitK:0,vitA:0,vitB12:0,magnesium:50,potassium:220,zinc:2,selenium:22,omega3:0.2,folates:25,phosphorus:220}},
+      {id:60,name:"Pain au levain",cat:"Céréales & Féculents",emoji:"🍞",p100:{cal:270,p:8,c:51,f:1.5,fiber:4.5,sugar:2,sodium:520,calcium:30,iron:1.5,vitC:0,vitD:0,vitE:0.2,vitK:0,vitA:0,vitB12:0,magnesium:30,potassium:160,zinc:1,selenium:18,omega3:0.05,folates:18,phosphorus:130}},
+      {id:61,name:"Pain de mie (tranches)",cat:"Céréales & Féculents",emoji:"🍞",p100:{cal:285,p:9,c:52,f:3.5,fiber:3.5,sugar:5,sodium:550,calcium:140,iron:1.5,vitC:0,vitD:0,vitE:0.2,vitK:0,vitA:0,vitB12:0.1,magnesium:22,potassium:130,zinc:0.7,selenium:16,omega3:0.05,folates:15,phosphorus:95}},
+      // ═══════════════ LÉGUMINEUSES ═══════════════
+      {id:62,name:"Lentilles vertes (cuites)",cat:"Légumineuses",emoji:"🫘",rawCoeff:2.5,p100:{cal:116,p:9,c:20,f:0.4,fiber:8,sugar:1.8,sodium:2,calcium:19,iron:3.3,vitC:1.5,vitD:0,vitE:0.1,vitK:1.7,vitA:0,vitB12:0,magnesium:36,potassium:369,zinc:1.3,selenium:3,omega3:0.04,folates:120,phosphorus:180}},
+      {id:63,name:"Lentilles corail (cuites)",cat:"Légumineuses",emoji:"🫘",rawCoeff:2.5,p100:{cal:100,p:8,c:17,f:0.3,fiber:7.9,sugar:1.4,sodium:2,calcium:18,iron:3,vitC:1.5,vitD:0,vitE:0.1,vitK:1.7,vitA:0,vitB12:0,magnesium:36,potassium:360,zinc:1.3,selenium:3,omega3:0.04,folates:100,phosphorus:170}},
+      {id:64,name:"Pois chiches (cuits)",cat:"Légumineuses",emoji:"🫘",rawCoeff:2.4,p100:{cal:164,p:8.9,c:27,f:2.6,fiber:7.6,sugar:4.8,sodium:7,calcium:49,iron:2.9,vitC:1.3,vitD:0,vitE:0.4,vitK:4,vitA:3,vitB12:0,magnesium:48,potassium:291,zinc:1.5,selenium:6,omega3:0.04,folates:172,phosphorus:168}},
+      {id:65,name:"Haricots rouges (cuits)",cat:"Légumineuses",emoji:"🫘",rawCoeff:2.5,p100:{cal:127,p:8.7,c:22.8,f:0.5,fiber:6.4,sugar:0.3,sodium:2,calcium:28,iron:2.2,vitC:1.2,vitD:0,vitE:0.1,vitK:8.4,vitA:0,vitB12:0,magnesium:45,potassium:405,zinc:1.1,selenium:2,omega3:0.03,folates:130,phosphorus:244}},
+      {id:66,name:"Edamame (cuit)",cat:"Légumineuses",emoji:"🫘",rawCoeff:1.0,p100:{cal:121,p:11.9,c:8.9,f:5.2,fiber:5.2,sugar:2.2,sodium:6,calcium:63,iron:2.3,vitC:9.7,vitD:0,vitE:0.7,vitK:26,vitA:9,vitB12:0,magnesium:64,potassium:436,zinc:1.4,selenium:1,omega3:0.3,folates:311,phosphorus:161}},
+      {id:67,name:"Tofu ferme",cat:"Légumineuses",emoji:"🫘",p100:{cal:76,p:8,c:1.9,f:4.2,fiber:0.3,sugar:0.9,sodium:7,calcium:350,iron:5.4,vitC:0.1,vitD:0,vitE:0.1,vitK:2.4,vitA:0,vitB12:0,magnesium:30,potassium:121,zinc:0.8,selenium:8,omega3:0.4,folates:15,phosphorus:97}},
+      {id:68,name:"Tempeh",cat:"Légumineuses",emoji:"🫘",p100:{cal:193,p:19,c:9,f:11,fiber:0,sugar:0,sodium:9,calcium:111,iron:2.7,vitC:0,vitD:0,vitE:0.4,vitK:0,vitA:0,vitB12:0,magnesium:81,potassium:412,zinc:1.7,selenium:0,omega3:0.2,folates:24,phosphorus:266}},
+      // ═══════════════ LÉGUMES ═══════════════
+      {id:69,name:"Épinards crus",cat:"Légumes",emoji:"🥬",p100:{cal:23,p:2.9,c:3.6,f:0.4,fiber:2.2,sugar:0.4,sodium:79,calcium:99,iron:2.7,vitC:28.1,vitD:0,vitE:2,vitK:483,vitA:469,vitB12:0,magnesium:79,potassium:558,zinc:0.5,selenium:1,omega3:0.1,folates:194,phosphorus:49}},
+      {id:70,name:"Épinards cuits",cat:"Légumes",emoji:"🥬",p100:{cal:28,p:3,c:3.5,f:0.4,fiber:2,sugar:0.4,sodium:95,calcium:136,iron:3.6,vitC:15,vitD:0,vitE:1.9,vitK:494,vitA:524,vitB12:0,magnesium:87,potassium:466,zinc:0.8,selenium:1,omega3:0.1,folates:146,phosphorus:56}},
+      {id:71,name:"Brocoli (cuit)",cat:"Légumes",emoji:"🥦",p100:{cal:35,p:2.4,c:7,f:0.4,fiber:3.3,sugar:1.7,sodium:41,calcium:40,iron:0.7,vitC:64.9,vitD:0,vitE:0.7,vitK:141,vitA:77,vitB12:0,magnesium:21,potassium:293,zinc:0.4,selenium:2,omega3:0.1,folates:168,phosphorus:67}},
+      {id:72,name:"Chou kale",cat:"Légumes",emoji:"🥬",p100:{cal:49,p:4.3,c:8.8,f:0.9,fiber:3.6,sugar:2.3,sodium:38,calcium:150,iron:1.5,vitC:120,vitD:0,vitE:1.5,vitK:817,vitA:681,vitB12:0,magnesium:47,potassium:491,zinc:0.4,selenium:1,omega3:0.2,folates:141,phosphorus:92}},
+      {id:73,name:"Tomate",cat:"Légumes",emoji:"🍅",p100:{cal:18,p:0.9,c:3.9,f:0.2,fiber:1.2,sugar:2.6,sodium:5,calcium:10,iron:0.3,vitC:14,vitD:0,vitE:0.5,vitK:7.9,vitA:42,vitB12:0,magnesium:11,potassium:237,zinc:0.2,selenium:0.4,omega3:0.01,folates:15,phosphorus:24}},
+      {id:74,name:"Concombre",cat:"Légumes",emoji:"🥒",p100:{cal:15,p:0.7,c:3.6,f:0.1,fiber:0.5,sugar:1.7,sodium:2,calcium:16,iron:0.3,vitC:2.8,vitD:0,vitE:0.1,vitK:16.4,vitA:5,vitB12:0,magnesium:13,potassium:147,zinc:0.2,selenium:0.3,omega3:0.01,folates:7,phosphorus:24}},
+      {id:75,name:"Poivron rouge",cat:"Légumes",emoji:"🫑",p100:{cal:31,p:1,c:6,f:0.3,fiber:2.1,sugar:4.2,sodium:4,calcium:7,iron:0.4,vitC:128,vitD:0,vitE:1.6,vitK:4.9,vitA:157,vitB12:0,magnesium:12,potassium:211,zinc:0.3,selenium:0.1,omega3:0.02,folates:46,phosphorus:26}},
+      {id:76,name:"Courgette",cat:"Légumes",emoji:"🥒",p100:{cal:17,p:1.2,c:3.1,f:0.3,fiber:1,sugar:2.5,sodium:8,calcium:16,iron:0.4,vitC:17,vitD:0,vitE:0.1,vitK:4.3,vitA:10,vitB12:0,magnesium:18,potassium:261,zinc:0.3,selenium:0.2,omega3:0.05,folates:24,phosphorus:38}},
+      {id:77,name:"Chou-fleur (cuit)",cat:"Légumes",emoji:"🥦",p100:{cal:25,p:1.9,c:5,f:0.3,fiber:2.3,sugar:2.4,sodium:30,calcium:22,iron:0.4,vitC:44,vitD:0,vitE:0.1,vitK:16,vitA:0,vitB12:0,magnesium:15,potassium:142,zinc:0.3,selenium:0.6,omega3:0.01,folates:57,phosphorus:40}},
+      {id:78,name:"Asperges (cuites)",cat:"Légumes",emoji:"🌿",p100:{cal:20,p:2.2,c:3.9,f:0.1,fiber:2.1,sugar:1.3,sodium:2,calcium:24,iron:2.1,vitC:7.7,vitD:0,vitE:1.1,vitK:51.9,vitA:38,vitB12:0,magnesium:14,potassium:202,zinc:0.5,selenium:2.3,omega3:0.04,folates:149,phosphorus:52}},
+      {id:79,name:"Haricots verts (cuits)",cat:"Légumes",emoji:"🌿",p100:{cal:31,p:1.8,c:7,f:0.1,fiber:3.4,sugar:3.3,sodium:1,calcium:37,iron:1.2,vitC:12,vitD:0,vitE:0.1,vitK:48,vitA:35,vitB12:0,magnesium:25,potassium:211,zinc:0.2,selenium:0.6,omega3:0.04,folates:45,phosphorus:38}},
+      {id:80,name:"Carotte",cat:"Légumes",emoji:"🥕",p100:{cal:41,p:0.9,c:10,f:0.2,fiber:2.8,sugar:4.7,sodium:69,calcium:33,iron:0.3,vitC:5.9,vitD:0,vitE:0.7,vitK:13.2,vitA:835,vitB12:0,magnesium:12,potassium:320,zinc:0.2,selenium:0.1,omega3:0.01,folates:19,phosphorus:35}},
+      {id:81,name:"Avocat",cat:"Légumes",emoji:"🥑",p100:{cal:160,p:2,c:9,f:15,fiber:6.7,sugar:0.7,sodium:7,calcium:12,iron:0.6,vitC:10,vitD:0,vitE:2.1,vitK:21,vitA:7,vitB12:0,magnesium:29,potassium:485,zinc:0.6,selenium:0.4,omega3:0.1,folates:81,phosphorus:52}},
+      {id:82,name:"Champignons de Paris",cat:"Légumes",emoji:"🍄",p100:{cal:22,p:3.1,c:3.3,f:0.3,fiber:1,sugar:2,sodium:5,calcium:3,iron:0.5,vitC:2.1,vitD:0.2,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:9,potassium:318,zinc:0.5,selenium:9,omega3:0.04,folates:17,phosphorus:86}},
+      {id:83,name:"Ail",cat:"Légumes",emoji:"🧄",p100:{cal:149,p:6.4,c:33,f:0.5,fiber:2.1,sugar:1,sodium:17,calcium:181,iron:1.7,vitC:31.2,vitD:0,vitE:0.1,vitK:1.7,vitA:0,vitB12:0,magnesium:25,potassium:401,zinc:1.2,selenium:14,omega3:0.02,folates:3,phosphorus:153}},
+      {id:84,name:"Oignon",cat:"Légumes",emoji:"🧅",p100:{cal:40,p:1.1,c:9.3,f:0.1,fiber:1.7,sugar:4.2,sodium:4,calcium:23,iron:0.2,vitC:7.4,vitD:0,vitE:0.1,vitK:0.4,vitA:0,vitB12:0,magnesium:10,potassium:146,zinc:0.2,selenium:0.5,omega3:0.01,folates:19,phosphorus:29}},
+      {id:85,name:"Échalote",cat:"Légumes",emoji:"🧅",p100:{cal:32,p:1.8,c:7.3,f:0.2,fiber:2.6,sugar:4.3,sodium:12,calcium:72,iron:1.5,vitC:18.8,vitD:0,vitE:0.1,vitK:0,vitA:4,vitB12:0,magnesium:21,potassium:334,zinc:0.4,selenium:1,omega3:0.02,folates:34,phosphorus:60}},
+      {id:86,name:"Betterave cuite",cat:"Légumes",emoji:"🫚",p100:{cal:43,p:1.6,c:10,f:0.2,fiber:2,sugar:7.3,sodium:77,calcium:16,iron:0.8,vitC:3.6,vitD:0,vitE:0.1,vitK:0,vitA:2,vitB12:0,magnesium:23,potassium:305,zinc:0.3,selenium:0.7,omega3:0.01,folates:80,phosphorus:40}},
+      // ═══════════════ FRUITS ═══════════════
+      {id:87,name:"Banane",cat:"Fruits",emoji:"🍌",p100:{cal:89,p:1.1,c:23,f:0.3,fiber:2.6,sugar:12.2,sodium:1,calcium:5,iron:0.3,vitC:8.7,vitD:0,vitE:0.1,vitK:0.5,vitA:3,vitB12:0,magnesium:27,potassium:358,zinc:0.2,selenium:1,omega3:0.03,folates:20,phosphorus:22}},
+      {id:88,name:"Pomme (avec peau)",cat:"Fruits",emoji:"🍎",p100:{cal:52,p:0.3,c:14,f:0.2,fiber:2.4,sugar:10,sodium:1,calcium:6,iron:0.1,vitC:4.6,vitD:0,vitE:0.2,vitK:2.2,vitA:3,vitB12:0,magnesium:5,potassium:107,zinc:0.04,selenium:0.1,omega3:0.01,folates:3,phosphorus:11}},
+      {id:89,name:"Orange",cat:"Fruits",emoji:"🍊",p100:{cal:47,p:0.9,c:12,f:0.1,fiber:2.4,sugar:9.4,sodium:0,calcium:40,iron:0.1,vitC:53.2,vitD:0,vitE:0.2,vitK:0,vitA:11,vitB12:0,magnesium:10,potassium:181,zinc:0.1,selenium:0.5,omega3:0.01,folates:30,phosphorus:14}},
+      {id:90,name:"Myrtilles",cat:"Fruits",emoji:"🫐",p100:{cal:57,p:0.7,c:14,f:0.3,fiber:2.4,sugar:10,sodium:1,calcium:6,iron:0.3,vitC:9.7,vitD:0,vitE:0.6,vitK:19.3,vitA:3,vitB12:0,magnesium:6,potassium:77,zinc:0.2,selenium:0.1,omega3:0.05,folates:6,phosphorus:12}},
+      {id:91,name:"Fraises",cat:"Fruits",emoji:"🍓",p100:{cal:32,p:0.7,c:7.7,f:0.3,fiber:2,sugar:4.9,sodium:1,calcium:16,iron:0.4,vitC:58.8,vitD:0,vitE:0.3,vitK:2.2,vitA:1,vitB12:0,magnesium:13,potassium:153,zinc:0.1,selenium:0.4,omega3:0.07,folates:24,phosphorus:24}},
+      {id:92,name:"Kiwi",cat:"Fruits",emoji:"🥝",p100:{cal:61,p:1.1,c:14.7,f:0.5,fiber:3,sugar:9,sodium:3,calcium:34,iron:0.3,vitC:92.7,vitD:0,vitE:1.5,vitK:40.3,vitA:3,vitB12:0,magnesium:17,potassium:312,zinc:0.1,selenium:0.2,omega3:0.04,folates:25,phosphorus:34}},
+      {id:93,name:"Mangue",cat:"Fruits",emoji:"🥭",p100:{cal:60,p:0.8,c:15,f:0.4,fiber:1.6,sugar:13.7,sodium:1,calcium:11,iron:0.2,vitC:36.4,vitD:0,vitE:0.9,vitK:4.2,vitA:54,vitB12:0,magnesium:10,potassium:168,zinc:0.1,selenium:0.6,omega3:0.05,folates:43,phosphorus:14}},
+      {id:94,name:"Pêche",cat:"Fruits",emoji:"🍑",p100:{cal:39,p:0.9,c:10,f:0.3,fiber:1.5,sugar:8.4,sodium:0,calcium:6,iron:0.2,vitC:6,vitD:0,vitE:0.7,vitK:2.6,vitA:16,vitB12:0,magnesium:9,potassium:190,zinc:0.2,selenium:0.1,omega3:0.01,folates:4,phosphorus:20}},
+      {id:95,name:"Abricot",cat:"Fruits",emoji:"🍑",p100:{cal:48,p:0.9,c:11,f:0.4,fiber:2,sugar:9.2,sodium:1,calcium:13,iron:0.4,vitC:10,vitD:0,vitE:0.9,vitK:3.3,vitA:96,vitB12:0,magnesium:10,potassium:259,zinc:0.2,selenium:0.1,omega3:0.07,folates:9,phosphorus:23}},
+      {id:96,name:"Abricot sec",cat:"Fruits",emoji:"🍑",p100:{cal:241,p:3,c:63,f:0.5,fiber:7,sugar:53,sodium:10,calcium:55,iron:2.7,vitC:1,vitD:0,vitE:4.3,vitK:3.1,vitA:180,vitB12:0,magnesium:32,potassium:1160,zinc:0.4,selenium:2,omega3:0.04,folates:8,phosphorus:71}},
+      {id:97,name:"Melon",cat:"Fruits",emoji:"🍈",p100:{cal:34,p:0.8,c:8,f:0.2,fiber:0.9,sugar:7.9,sodium:16,calcium:9,iron:0.2,vitC:36,vitD:0,vitE:0.1,vitK:2.5,vitA:169,vitB12:0,magnesium:12,potassium:267,zinc:0.2,selenium:0.4,omega3:0.01,folates:21,phosphorus:15}},
+      {id:98,name:"Pastèque",cat:"Fruits",emoji:"🍉",p100:{cal:30,p:0.6,c:7,f:0.2,fiber:0.4,sugar:6.2,sodium:1,calcium:7,iron:0.2,vitC:8,vitD:0,vitE:0.1,vitK:0.1,vitA:28,vitB12:0,magnesium:10,potassium:112,zinc:0.1,selenium:0.4,omega3:0.05,folates:3,phosphorus:11}},
+      {id:99,name:"Datte fraîche",cat:"Fruits",emoji:"🌰",p100:{cal:142,p:1.4,c:36,f:0.2,fiber:2.7,sugar:32,sodium:1,calcium:39,iron:1,vitC:0,vitD:0,vitE:0.1,vitK:2.7,vitA:7,vitB12:0,magnesium:43,potassium:250,zinc:0.4,selenium:3,omega3:0.01,folates:15,phosphorus:62}},
+      {id:100,name:"Figue fraîche",cat:"Fruits",emoji:"🌿",p100:{cal:74,p:0.8,c:19,f:0.3,fiber:2.9,sugar:16.3,sodium:1,calcium:35,iron:0.4,vitC:2,vitD:0,vitE:0.1,vitK:4.7,vitA:7,vitB12:0,magnesium:17,potassium:232,zinc:0.2,selenium:0.2,omega3:0.1,folates:6,phosphorus:14}},
+      {id:101,name:"Raisins secs",cat:"Fruits",emoji:"🍇",p100:{cal:299,p:3,c:79,f:0.5,fiber:4,sugar:65,sodium:26,calcium:50,iron:1.9,vitC:2.3,vitD:0,vitE:0.1,vitK:3.5,vitA:0,vitB12:0,magnesium:35,potassium:320,zinc:0.2,selenium:0.7,omega3:0.05,folates:5,phosphorus:101}},
+      // ═══════════════ OLÉAGINEUX & GRAINES ═══════════════
+      {id:102,name:"Amandes",cat:"Oléagineux & Graines",emoji:"🌰",p100:{cal:579,p:21,c:22,f:50,fiber:12.5,sugar:4.4,sodium:1,calcium:264,iron:3.7,vitC:0,vitD:0,vitE:25.6,vitK:0,vitA:0,vitB12:0,magnesium:270,potassium:733,zinc:3.1,selenium:2,omega3:0.4,folates:44,phosphorus:481}},
+      {id:103,name:"Noix",cat:"Oléagineux & Graines",emoji:"🌰",p100:{cal:654,p:15,c:14,f:65,fiber:6.7,sugar:2.6,sodium:2,calcium:98,iron:2.9,vitC:1.3,vitD:0,vitE:0.7,vitK:2.7,vitA:1,vitB12:0,magnesium:158,potassium:441,zinc:3.1,selenium:5,omega3:9.1,folates:98,phosphorus:346}},
+      {id:104,name:"Noisettes",cat:"Oléagineux & Graines",emoji:"🌰",p100:{cal:628,p:15,c:17,f:61,fiber:9.7,sugar:4.3,sodium:0,calcium:114,iron:4.7,vitC:6.3,vitD:0,vitE:15,vitK:14.2,vitA:1,vitB12:0,magnesium:163,potassium:680,zinc:2.4,selenium:2,omega3:0.1,folates:113,phosphorus:290}},
+      {id:105,name:"Noix de cajou",cat:"Oléagineux & Graines",emoji:"🌰",p100:{cal:553,p:18,c:30,f:44,fiber:3.3,sugar:5.9,sodium:12,calcium:37,iron:6.7,vitC:0.5,vitD:0,vitE:0.9,vitK:34.7,vitA:0,vitB12:0,magnesium:292,potassium:660,zinc:5.8,selenium:20,omega3:0.2,folates:25,phosphorus:593}},
+      {id:106,name:"Noix du Brésil",cat:"Oléagineux & Graines",emoji:"🌰",p100:{cal:656,p:14,c:12,f:66,fiber:7.5,sugar:2.3,sodium:3,calcium:160,iron:2.4,vitC:0.7,vitD:0,vitE:5.7,vitK:0,vitA:0,vitB12:0,magnesium:376,potassium:659,zinc:4.1,selenium:1917,omega3:0.05,folates:22,phosphorus:725}},
+      {id:107,name:"Pistaches",cat:"Oléagineux & Graines",emoji:"🌰",p100:{cal:560,p:20,c:28,f:45,fiber:10,sugar:7.7,sodium:1,calcium:105,iron:3.9,vitC:5.6,vitD:0,vitE:2.9,vitK:13.2,vitA:26,vitB12:0,magnesium:121,potassium:1025,zinc:2.2,selenium:7,omega3:0.3,folates:51,phosphorus:490}},
+      {id:108,name:"Pignons de pin",cat:"Oléagineux & Graines",emoji:"🌰",p100:{cal:673,p:14,c:13,f:68,fiber:3.7,sugar:3.6,sodium:2,calcium:16,iron:5.5,vitC:0.8,vitD:0,vitE:9,vitK:54,vitA:1,vitB12:0,magnesium:251,potassium:597,zinc:6.4,selenium:0.7,omega3:0.1,folates:57,phosphorus:575}},
+      {id:109,name:"Noix de macadamia",cat:"Oléagineux & Graines",emoji:"🌰",p100:{cal:718,p:8,c:14,f:76,fiber:8.6,sugar:4.6,sodium:5,calcium:85,iron:3.7,vitC:1.2,vitD:0,vitE:0.5,vitK:0,vitA:0,vitB12:0,magnesium:130,potassium:368,zinc:1.3,selenium:3,omega3:0.2,folates:11,phosphorus:188}},
+      {id:110,name:"Graines de chia",cat:"Oléagineux & Graines",emoji:"🌱",p100:{cal:486,p:17,c:42,f:31,fiber:34,sugar:0,sodium:16,calcium:631,iron:7.7,vitC:1.6,vitD:0,vitE:0.5,vitK:0,vitA:54,vitB12:0,magnesium:335,potassium:407,zinc:4.6,selenium:55,omega3:17.8,folates:49,phosphorus:860}},
+      {id:111,name:"Graines de lin",cat:"Oléagineux & Graines",emoji:"🌱",p100:{cal:534,p:18.3,c:28.9,f:42.2,fiber:27.3,sugar:1.6,sodium:30,calcium:255,iron:5.7,vitC:0.6,vitD:0,vitE:0.3,vitK:4.3,vitA:0,vitB12:0,magnesium:392,potassium:813,zinc:4.3,selenium:25,omega3:22.8,folates:87,phosphorus:642}},
+      {id:112,name:"Graines de sésame",cat:"Oléagineux & Graines",emoji:"🌱",p100:{cal:573,p:17.7,c:23.5,f:49.7,fiber:11.8,sugar:0.3,sodium:11,calcium:975,iron:14.6,vitC:0,vitD:0,vitE:0.3,vitK:0,vitA:0,vitB12:0,magnesium:351,potassium:468,zinc:7.8,selenium:34,omega3:0.4,folates:97,phosphorus:629}},
+      {id:113,name:"Graines de tournesol",cat:"Oléagineux & Graines",emoji:"🌱",p100:{cal:584,p:21,c:20,f:51,fiber:8.6,sugar:2.6,sodium:9,calcium:78,iron:5.3,vitC:1.4,vitD:0,vitE:35,vitK:0,vitA:3,vitB12:0,magnesium:325,potassium:645,zinc:5,selenium:53,omega3:0.06,folates:227,phosphorus:660}},
+      {id:114,name:"Graines de courge",cat:"Oléagineux & Graines",emoji:"🌱",p100:{cal:559,p:30.2,c:10.7,f:49,fiber:6,sugar:1.4,sodium:7,calcium:46,iron:8.8,vitC:1.9,vitD:0,vitE:2.2,vitK:7.3,vitA:16,vitB12:0,magnesium:592,potassium:809,zinc:7.8,selenium:9,omega3:0.1,folates:57,phosphorus:1233}},
+      {id:115,name:"Beurre de cacahuète",cat:"Oléagineux & Graines",emoji:"🥜",p100:{cal:589,p:25,c:20,f:50,fiber:6,sugar:9,sodium:417,calcium:49,iron:1.7,vitC:0,vitD:0,vitE:9.1,vitK:0,vitA:0,vitB12:0,magnesium:170,potassium:649,zinc:2.9,selenium:4,omega3:0.3,folates:87,phosphorus:335}},
+      // ═══════════════ CORPS GRAS & HUILES ═══════════════
+      {id:116,name:"Huile d'olive (vierge extra)",cat:"Corps Gras & Huiles",emoji:"🫙",p100:{cal:884,p:0,c:0,f:100,fiber:0,sugar:0,sodium:2,calcium:1,iron:0.6,vitC:0,vitD:0,vitE:14,vitK:60,vitA:0,vitB12:0,magnesium:0,potassium:1,zinc:0,selenium:0,omega3:0.8,folates:0,phosphorus:0}},
+      {id:117,name:"Huile de colza",cat:"Corps Gras & Huiles",emoji:"🫙",p100:{cal:884,p:0,c:0,f:100,fiber:0,sugar:0,sodium:0,calcium:0,iron:0,vitC:0,vitD:0,vitE:18,vitK:71,vitA:0,vitB12:0,magnesium:0,potassium:0,zinc:0,selenium:0,omega3:9.1,folates:0,phosphorus:0}},
+      {id:118,name:"Huile de noix",cat:"Corps Gras & Huiles",emoji:"🌰",p100:{cal:884,p:0,c:0,f:100,fiber:0,sugar:0,sodium:0,calcium:0,iron:0,vitC:0,vitD:0,vitE:20,vitK:0,vitA:0,vitB12:0,magnesium:0,potassium:0,zinc:0,selenium:0,omega3:13,folates:0,phosphorus:0}},
+      {id:119,name:"Huile de lin",cat:"Corps Gras & Huiles",emoji:"🌱",p100:{cal:884,p:0,c:0,f:100,fiber:0,sugar:0,sodium:0,calcium:0,iron:0,vitC:0,vitD:0,vitE:17,vitK:0,vitA:0,vitB12:0,magnesium:0,potassium:0,zinc:0,selenium:0,omega3:53,folates:0,phosphorus:0}},
+      {id:120,name:"Huile de tournesol",cat:"Corps Gras & Huiles",emoji:"🌻",p100:{cal:884,p:0,c:0,f:100,fiber:0,sugar:0,sodium:0,calcium:0,iron:0,vitC:0,vitD:0,vitE:41,vitK:0,vitA:0,vitB12:0,magnesium:0,potassium:0,zinc:0,selenium:0,omega3:0.2,folates:0,phosphorus:0}},
+      {id:121,name:"Huile de coco",cat:"Corps Gras & Huiles",emoji:"🥥",p100:{cal:862,p:0,c:0,f:100,fiber:0,sugar:0,sodium:0,calcium:0,iron:0,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:0,potassium:0,zinc:0,selenium:0,omega3:0,folates:0,phosphorus:0}},
+      {id:122,name:"Huile de sésame",cat:"Corps Gras & Huiles",emoji:"🌱",p100:{cal:884,p:0,c:0,f:100,fiber:0,sugar:0,sodium:0,calcium:0,iron:0,vitC:0,vitD:0,vitE:1,vitK:0,vitA:0,vitB12:0,magnesium:0,potassium:0,zinc:0,selenium:0,omega3:0.3,folates:0,phosphorus:0}},
+      {id:123,name:"Huile de noisette",cat:"Corps Gras & Huiles",emoji:"🌰",p100:{cal:884,p:0,c:0,f:100,fiber:0,sugar:0,sodium:0,calcium:0,iron:0,vitC:0,vitD:0,vitE:47,vitK:0,vitA:0,vitB12:0,magnesium:0,potassium:0,zinc:0,selenium:0,omega3:0.1,folates:0,phosphorus:0}},
+      // ═══════════════ PROTÉINES & COMPLÉMENTS ═══════════════
+      {id:124,name:"Whey protéine (1 scoop ~30g)",cat:"Protéines & Compléments",emoji:"💪",p100:{cal:380,p:74,c:8,f:5,fiber:0,sugar:5,sodium:150,calcium:600,iron:1,vitC:0,vitD:2,vitE:0,vitK:0,vitA:0,vitB12:0.5,magnesium:50,potassium:400,zinc:3,selenium:10,omega3:0,folates:0,phosphorus:400}},
+      {id:125,name:"Caséine (1 scoop ~30g)",cat:"Protéines & Compléments",emoji:"💪",p100:{cal:360,p:78,c:5,f:4,fiber:0,sugar:3,sodium:200,calcium:700,iron:1,vitC:0,vitD:2,vitE:0,vitK:0,vitA:0,vitB12:0.5,magnesium:60,potassium:500,zinc:3,selenium:10,omega3:0,folates:0,phosphorus:500}},
+      {id:126,name:"Protéine végétale (pois)",cat:"Protéines & Compléments",emoji:"🌱",p100:{cal:370,p:80,c:5,f:2,fiber:2,sugar:2,sodium:400,calcium:100,iron:8,vitC:0,vitD:0,vitE:0,vitK:0,vitA:0,vitB12:0,magnesium:100,potassium:300,zinc:2,selenium:5,omega3:0,folates:0,phosphorus:600}},
+      // ═══════════════ BOISSONS ═══════════════
+      {id:127,name:"Lait d'amande (non sucré)",cat:"Boissons",emoji:"🥛",p100:{cal:15,p:0.6,c:0.3,f:1.1,fiber:0.2,sugar:0,sodium:72,calcium:120,iron:0.2,vitC:0,vitD:1,vitE:6,vitK:0,vitA:0,vitB12:0.4,magnesium:6,potassium:67,zinc:0.1,selenium:0,omega3:0.06,folates:0,phosphorus:20}},
+      {id:128,name:"Lait de soja (nature)",cat:"Boissons",emoji:"🥛",p100:{cal:33,p:3.3,c:1.3,f:1.8,fiber:0,sugar:1.3,sodium:51,calcium:25,iron:0.4,vitC:0,vitD:0,vitE:0.1,vitK:0,vitA:0,vitB12:0,magnesium:18,potassium:118,zinc:0.3,selenium:3,omega3:0.4,folates:18,phosphorus:52}},
+      {id:129,name:"Jus d'orange (frais)",cat:"Boissons",emoji:"🍊",p100:{cal:45,p:0.7,c:10.4,f:0.2,fiber:0.2,sugar:8.4,sodium:1,calcium:11,iron:0.2,vitC:50,vitD:0,vitE:0.1,vitK:0,vitA:4,vitB12:0,magnesium:11,potassium:200,zinc:0.1,selenium:0.1,omega3:0.01,folates:30,phosphorus:17}},
+    ];
+    
+    // ─── EXERCISES (from your file, organized by muscle + equipment) ─────────────
+    const EXERCISES_BY_GROUP = {
+      "💪 Pectoraux":{
+        "Barre":["Développé couché barre","Développé incliné barre","Développé décliné barre","Développé couché prise serrée","Développé couché guidé (Smith)","Développé incliné guidé","Développé décliné guidé"],
+        "Haltères":["Développé couché haltères","Développé incliné haltères","Développé décliné haltères","Développé neutre haltères","Développé alterné haltères","Développé haltères unilatéral"],
+        "Machine / Poulie":["Écarté couché haltères","Écarté incliné haltères","Écarté décliné haltères","Écarté poulie vis-à-vis","Écarté bas→haut (pecs sup.)","Écarté haut→bas (pecs inf.)","Écarté unilatéral poulie","Pec deck / Butterfly","Presse à pectoraux machine","Chest press machine","Chest press inclinée","Hammer Strength poitrine","Machine convergente pectoraux","Poulie un bras poitrine","Pull-over à la poulie"],
+      },
+      "🔙 Dos":{
+        "Barre":["Rowing barre buste penché","Rowing barre Yates","Rowing barre prise large","Rowing barre prise inversée","Rowing T-bar","Soulevé de terre conventionnel","Shrugs barre"],
+        "Haltères":["Rowing haltère à un bras","Rowing haltère poitrine sur banc","Pullover haltère","Shrugs haltères"],
+        "Machine / Poulie":["Traction pronation","Traction supination","Traction prise neutre","Traction large","Traction serrée","Traction assistée machine","Traction lestée","Tirage vertical poulie poitrine","Tirage vertical unilatéral","Rowing machine","Rowing poulie basse","Rowing poulie unilatéral","Rowing chest-supported machine","Hammer Strength dos","Machine convergente dorsaux","Tirage vertical guidé","Tirage horizontal guidé","Pulldown iso-latéral","Pullover machine","Straight-arm pulldown","Pulldown bras tendus","Tirage un bras poulie haute","Face pull","Shrugs machine","Élévations scapulaires"],
+      },
+      "💈 Biceps":{
+        "Barre":["Curl barre droite","Curl barre EZ","Curl barre large","Curl barre serrée","Curl barre prise inversée","Drag curl","Cheat curl (avancé)","Curl barre poulie basse"],
+        "Haltères":["Curl haltères alterné","Curl haltères simultané","Curl haltères supination","Curl haltères marteau","Curl marteau croisé","Curl haltères assis","Curl haltères incliné","Curl concentration","Curl Zottman","Curl Spider haltères","Curl unilatéral strict"],
+        "Machine / Poulie":["Curl machine guidée","Curl machine convergente","Curl pupitre machine","Curl poulie basse","Curl poulie unilatéral","Curl poulie corde","Curl poulie barre EZ","Curl marteau à la corde","Curl inversé poulie"],
+      },
+      "🔱 Triceps":{
+        "Barre":["Barre au front (skull crushers)","Barre au front incliné","Barre au front décliné","Extensions triceps barre EZ","JM Press","Close grip bench press"],
+        "Haltères":["Extension triceps haltère deux mains","Extension triceps haltère unilatérale","Extension nuque haltère","Kickback haltère"],
+        "Machine / Poulie":["Pushdown barre droite","Pushdown barre V","Pushdown corde","Extension triceps poulie haute","Extension triceps unilatérale poulie","Extension nuque poulie","Overhead triceps extension corde","Cross-body triceps extension","Extension triceps machine guidée","Dips assistés machine","Press triceps convergente","Machine triceps assis","Dips (poids du corps)"],
+      },
+      "🏔️ Épaules":{
+        "Barre":["Développé militaire barre","Développé militaire prise large","Push press","Élévations frontales barre","Tirage menton barre","Rowing barre trapèzes"],
+        "Haltères":["Développé militaire haltères","Développé Arnold","Élévations frontales haltères","Élévations latérales haltères","Oiseau inversé (reverse fly)","Rowing haltères trapèzes","Shrugs haltères"],
+        "Machine / Poulie":["Shoulder press machine","Machine épaules poussée latérale","Reverse pec deck (arrière)","Élévations latérales poulie","Face pull","Tirage horizontal poulie coudes ouverts"],
+      },
+      "🦵 Quadriceps":{
+        "Barre":["Squat arrière (back squat)","Squat avant (front squat)","Hack squat barre","Fente avant barre","Squat bulgare barre","Pistol squat assisté barre"],
+        "Haltères":["Fente avant haltères","Fente arrière haltères","Squat goblet","Squat bulgare haltères","Step-up haltères"],
+        "Machine / Poulie":["Leg press (pieds bas)","Hack squat machine","Extension de jambes (leg extension)","Squat guidé Smith machine"],
+      },
+      "🦿 Ischio-jambiers":{
+        "Barre":["Soulevé de terre jambes tendues (stiff)","Soulevé de terre conventionnel","Soulevé de terre sumo","Good morning"],
+        "Haltères":["Soulevé de terre jambes tendues haltères","Soulevé de terre roumain (RDL)","Fente arrière (accent ischios)","Squat bulgare (accent arrière)"],
+        "Machine / Poulie":["Leg curl couché","Leg curl assis","Glute-ham raise machine","Nordic curl"],
+      },
+      "🍑 Fessiers":{
+        "Barre":["Hip thrust barre","Soulevé de terre sumo","Soulevé de terre jambes tendues"],
+        "Haltères":["Hip thrust haltère","Fente avant / arrière haltères","Step-up sur banc haltères"],
+        "Machine / Poulie":["Glute bridge / Hip thrust machine","Leg press pieds hauts","Kickback machine","Abduction de hanches machine","Câble kickback"],
+      },
+      "🦶 Mollets":{
+        "Barre":["Standing calf raise barre","Donkey calf raise barre","Squat + extension sur pointes"],
+        "Haltères":["Standing calf raise haltères","Donkey calf raise haltère","Step-up sur pointes haltères"],
+        "Machine / Poulie":["Standing calf raise machine","Seated calf raise machine (soléaire)","Leg press sur pointes (mollets)"],
+      },
+      "⚡ Abdominaux":{
+        "Poids du corps":["Gainage planche","Gainage côté (oblique)","Crunch","Crunch oblique","Russian twist","Relevé de jambes au sol","Relevé de jambes à la barre","Relevé de jambes à la chaise romaine","Dead bug","Mountain climber","Bicycle crunch","V-up","Hollow body hold","Ab wheel"],
+        "Machine / Poulie":["Crunch poulie haute","Crunch machine abdominaux","Rotation oblique machine","Tirage poulie basse avec rotation"],
+        "Lestés":["Crunch lestés","Russian twist lestés","Relevé de jambes lestés","Gainage lestés (gilet)"],
+      },
+      "🔥 Full Body / Cardio":{
+        "Haltères / Barre":["Clean & Press","Thrusters","Kettlebell swing","Turkish get-up","Snatch haltère"],
+        "Poids du corps":["Burpees","Box jump","Saut à la corde","Battle ropes"],
+        "Machine / Cardio":["Rowing ergomètre","Vélo stationnaire HIIT","Tapis de course","Elliptique","Sled push"],
+      },
+    };
+    
+    // ─── BUILT-IN RECIPE DATABASE ──────────────────────────────────────────────────
+    const RECIPE_DB = [
+      {id:"r1",name:"Bowl protéiné avoine & whey",cat:"Petit-déjeuner",emoji:"🥣",goal:["bulk","recomp"],diet:[],time:"5 min",diff:"Très facile",cal:480,p:32,c:58,f:12,ingredients:["80g flocons d'avoine","200ml lait demi-écrémé","1 scoop whey vanille (30g)","1 banane","15g beurre de cacahuète","1 cc miel"],steps:["Cuire les flocons avec le lait 3 min au micro-ondes.","Mélanger la whey avec un peu d'eau froide, incorporer aux flocons.","Couper la banane en rondelles sur le dessus.","Ajouter le beurre de cacahuète et le miel."],tip:"Prépare la veille au frigo pour un overnight oats parfait !"},
+      {id:"r2",name:"Omelette épinards-feta",cat:"Petit-déjeuner",emoji:"🍳",goal:["cut","recomp"],diet:[],time:"10 min",diff:"Facile",cal:310,p:28,c:4,f:20,ingredients:["3 œufs entiers","2 blancs d'œufs","80g épinards frais","30g feta","½ oignon","1 cs huile d'olive","Sel, poivre, herbes"],steps:["Battre les œufs avec les blancs. Saler, poivrer.","Faire revenir l'oignon et les épinards 2 min à l'huile d'olive.","Verser les œufs, cuire à feu moyen 2 min.","Émietter la feta, plier l'omelette. Servir."],tip:"Ajoute du piment d'Espelette pour booster le métabolisme !"},
+      {id:"r3",name:"Pancakes avoine-banane protéinés",cat:"Petit-déjeuner",emoji:"🥞",goal:["bulk","recomp"],diet:[],time:"15 min",diff:"Facile",cal:420,p:30,c:52,f:9,ingredients:["100g flocons d'avoine mixés","2 œufs","1 banane mûre","1 scoop whey (30g)","100ml lait","½ cc levure","Cannelle"],steps:["Mixer les flocons en farine. Écraser la banane.","Mélanger tous les ingrédients jusqu'à texture homogène.","Cuire les pancakes 2 min par face dans une poêle anti-adhésive.","Servir avec du skyr et des fruits frais."],tip:"Remplace la banane par une compote sans sucre pour moins de glucides."},
+      {id:"r4",name:"Bowl poulet-riz-légumes (Meal Prep)",cat:"Déjeuner",emoji:"🍱",goal:["bulk","recomp","cut"],diet:[],time:"25 min",diff:"Facile",cal:520,p:42,c:55,f:12,ingredients:["250g poitrine de poulet","180g riz basmati cru","200g brocoli","1 poivron rouge","2 cs sauce soja","1 cs huile d'olive","Ail, gingembre, sésame"],steps:["Cuire le riz basmati. Réserver.","Découper le poulet en dés, faire dorer 8 min à l'huile avec l'ail.","Ajouter les légumes, faire sauter 5 min. Déglacer à la sauce soja.","Dresser riz + légumes + poulet. Parsemer de sésame."],tip:"Se conserve 4 jours au frigo — parfait pour le meal prep du dimanche !"},
+      {id:"r5",name:"Salade niçoise protéinée",cat:"Déjeuner",emoji:"🥗",goal:["cut","recomp"],diet:[],time:"15 min",diff:"Facile",cal:380,p:35,c:22,f:16,ingredients:["160g thon naturel","2 œufs durs","200g haricots verts cuits","100g tomates cerises","60g mesclun","40g olives noires","1 cs huile d'olive","Citron, herbes de Provence"],steps:["Cuire les œufs durs 10 min, couper en quartiers.","Disposer le mesclun dans un saladier.","Ajouter les haricots verts, tomates, olives, thon, œufs.","Assaisonner avec l'huile d'olive, le citron et les herbes."],tip:"Excellent ratio protéines/calories — parfait pour une journée de sèche !"},
+      {id:"r6",name:"Buddha bowl lentilles-avocat",cat:"Déjeuner",emoji:"🥙",goal:["recomp","cut"],diet:["Végan","Végétarien"],time:"20 min",diff:"Facile",cal:490,p:20,c:55,f:20,ingredients:["150g lentilles vertes cuites","100g quinoa cuit","½ avocat","100g concombre","100g carotte râpée","50g épinards","Sauce tahini : 1cs tahini, citron, ail, eau"],steps:["Disposer le quinoa et les lentilles dans un bol.","Couper l'avocat en tranches, le concombre en demi-lunes.","Ajouter les carottes râpées et les épinards.","Napper de sauce tahini."],tip:"Légumineuses + céréales = protéine complète pour les végans !"},
+      {id:"r7",name:"Saumon en papillote légumes",cat:"Dîner",emoji:"🐠",goal:["cut","recomp","bulk"],diet:[],time:"30 min",diff:"Facile",cal:420,p:38,c:18,f:22,ingredients:["400g saumon (2 pavés)","200g courgette","150g poivron rouge","1 tomate","2 cs huile d'olive","Herbes de Provence","1 citron","Ail, sel, poivre"],steps:["Préchauffer le four à 200°C.","Couper les légumes, disposer sur du papier alu.","Poser les pavés de saumon sur les légumes. Assaisonner.","Fermer les papillotes et cuire 20-25 min. Servir avec du citron."],tip:"La papillote conserve tous les omega-3 du saumon !"},
+      {id:"r8",name:"Soupe lentilles corail & coco",cat:"Dîner",emoji:"🍲",goal:["recomp","cut"],diet:["Végan","Végétarien","Sans gluten"],time:"25 min",diff:"Facile",cal:340,p:18,c:45,f:10,ingredients:["150g lentilles corail","400ml lait de coco allégé","1 boîte tomates pelées","1 oignon","2 gousses ail","1 cs curry","1 cs huile de coco","Coriandre fraîche"],steps:["Faire revenir l'oignon et l'ail dans l'huile 3 min.","Ajouter le curry, les tomates, les lentilles et 400ml d'eau.","Cuire 15 min à couvert. Ajouter le lait de coco.","Mixer partiellement. Garnir de coriandre."],tip:"Riche en fer végétal — associe avec du citron pour améliorer l'absorption !"},
+      {id:"r9",name:"Energy balls protéinées",cat:"Collation",emoji:"🟤",goal:["bulk","recomp"],diet:["Végan","Sans gluten"],time:"15 min",diff:"Très facile",cal:220,p:8,c:22,f:12,ingredients:["100g flocons d'avoine","2 cs beurre de cacahuète","1 cs miel","1 scoop whey chocolat","30g chocolat noir 85%","2 cs lait","Pincée de sel"],steps:["Mixer les flocons en farine.","Mélanger tous les ingrédients jusqu'à obtenir une pâte.","Former des boules de la taille d'une noix.","Réfrigérer 30 min avant de déguster."],tip:"Se conserve 1 semaine au frigo ou 3 mois au congélateur."},
+      {id:"r10",name:"Smoothie vert protéiné",cat:"Collation",emoji:"🥤",goal:["cut","recomp"],diet:["Végan"],time:"5 min",diff:"Très facile",cal:280,p:20,c:32,f:7,ingredients:["1 scoop whey vanille (30g)","200ml lait d'amande","1 banane congelée","50g épinards frais","1 cs graines de chia","½ citron vert","Glaçons"],steps:["Placer tous les ingrédients dans le blender.","Mixer 1 minute jusqu'à texture lisse.","Ajuster la consistance avec plus de lait si nécessaire.","Consommer immédiatement ou dans les 2h."],tip:"La banane congelée donne une texture épaisse sans graisses saturées."},
+    ];
+    
+    const MEALS=["Petit-déjeuner","Déjeuner","Dîner","Collation"];
+    const GOALS=[{id:"bulk",label:"Prise de masse",desc:"Surplus calorique pour construire du muscle",icon:"💪",adjust:1.15},{id:"cut",label:"Sèche",desc:"Déficit calorique pour perdre de la graisse",icon:"🔥",adjust:0.80},{id:"recomp",label:"Recomposition",desc:"Maintenir le poids, changer la composition",icon:"⚖️",adjust:1.0}];
+    const ACTIVITY=[{id:"sedentary",label:"Sédentaire",desc:"Peu ou pas d'exercice",mult:1.2},{id:"light",label:"Légèrement actif",desc:"1-3 jours/semaine",mult:1.375},{id:"moderate",label:"Modérément actif",desc:"3-5 jours/semaine",mult:1.55},{id:"active",label:"Très actif",desc:"6-7 jours/semaine",mult:1.725},{id:"extreme",label:"Extrêmement actif",desc:"Sport + travail physique",mult:1.9}];
+    const CONGRATS_MSGS=["🔥 Série enregistrée !","💪 En feu !","⚡ Excellent travail !","🏆 Série validée !","🎯 Parfait !","💥 Boom ! Belle série !","🚀 Tu envoies !","✅ Bien joué !","🌟 Superbe !","😤 Force & détermination !"];
+    const MUSCLE_GROUPS=Object.keys(EXERCISES_BY_GROUP);
+    const FOOD_CATS=[...new Set(FOOD_DB.map(f=>f.cat))];
+    
+    function calcTDEE(pr){
+      const bmr=pr.sex==="M"?10*pr.weight+6.25*pr.height-5*pr.age+5:10*pr.weight+6.25*pr.height-5*pr.age-161;
+      const act=ACTIVITY.find(a=>a.id===pr.activity)?.mult||1.55;
+      const adj=GOALS.find(g=>g.id===pr.goal)?.adjust||1;
+      const tdee=Math.round(bmr*act*adj);
+      const protein=Math.round(pr.weight*(pr.goal==="cut"?2.4:pr.goal==="bulk"?2.2:2));
+      const fat=Math.round((tdee*0.25)/9);
+      const carbs=Math.round((tdee-protein*4-fat*9)/4);
+      return{tdee,protein,carbs,fat};
+    }
+    
+    function MacroRing({cal,goal,protein,carbs,fat,gProtein,gCarbs,gFat}){
+      const pct=Math.min((cal/goal)*100,100);
+      const r=54,circ=2*Math.PI*r,dash=(circ*pct)/100;
+      const color=pct>100?"#ef4444":pct>85?"#f59e0b":"#8b5cf6";
+      return(
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
+          <div style={{position:"relative",width:140,height:140}}>
+            <svg width="140" height="140" style={{transform:"rotate(-90deg)"}}>
+              <circle cx="70" cy="70" r={r} fill="none" stroke="#1e1e2e" strokeWidth="10"/>
+              <circle cx="70" cy="70" r={r} fill="none" stroke={color} strokeWidth="10" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" style={{transition:"stroke-dasharray 0.5s ease"}}/>
+            </svg>
+            <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+              <div style={{fontSize:26,fontWeight:800,color:"#fff",fontFamily:"'Bebas Neue',sans-serif",letterSpacing:1}}>{cal}</div>
+              <div style={{fontSize:11,color:"#666",fontFamily:"'DM Sans',sans-serif"}}>/ {goal} kcal</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:16}}>
+            {[{l:"Prot.",v:protein,g:gProtein,c:"#8b5cf6"},{l:"Glu.",v:carbs,g:gCarbs,c:"#3b82f6"},{l:"Lip.",v:fat,g:gFat,c:"#f59e0b"}].map(m=>(
+              <div key={m.l} style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:700,color:m.c,fontFamily:"'DM Sans',sans-serif"}}>{m.v}g</div><div style={{fontSize:10,color:"#555",fontFamily:"'DM Sans',sans-serif"}}>{m.l}/{m.g}g</div></div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    
+    function StepCounter(){
+      const [steps,setSteps]=useState(0);
+      const [running,setRunning]=useState(false);
+      const ref=useRef();
+      useEffect(()=>{if(running){ref.current=setInterval(()=>setSteps(s=>Math.min(s+Math.floor(Math.random()*8+3),15000)),1000);}else clearInterval(ref.current);return()=>clearInterval(ref.current);},[running]);
+      const goal=10000,pct=Math.min((steps/goal)*100,100);
+      const color=pct>=100?"#10b981":pct>=60?"#f59e0b":"#8b5cf6";
+      return(
+        <div style={{...SC.card,background:"linear-gradient(135deg,#0f0f1a,#1a0f2e)",border:"1px solid #2a1a4e"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9}}>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:"#ccc",letterSpacing:1}}>👟 COMPTEUR DE PAS</div>
+            <button onClick={()=>setRunning(r=>!r)} style={{background:running?"#ef4444":"#10b981",color:"#fff",border:"none",borderRadius:8,padding:"3px 10px",fontSize:10,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{running?"⏸ Pause":"▶ Simuler"}</button>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,color,letterSpacing:2,lineHeight:1}}>{steps.toLocaleString("fr-FR")}</div>
+              <div style={{color:"#555",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>/ {goal.toLocaleString("fr-FR")} pas</div>
+              <div style={{marginTop:6,background:"#1a1a2e",borderRadius:4,height:4,overflow:"hidden"}}><div style={{width:`${pct}%`,height:"100%",background:color,borderRadius:4,transition:"width 0.5s"}}/></div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:5}}>
+              {[{v:(steps*0.00075).toFixed(1),l:"km"},{v:Math.round(steps*0.04),l:"kcal",c:"#f59e0b"}].map(x=>(
+                <div key={x.l} style={{background:"#1a1a2e",borderRadius:7,padding:"4px 8px",textAlign:"center"}}><div style={{color:x.c||"#fff",fontSize:12,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{x.v}</div><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>{x.l}</div></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    function Toast({msg,onClose}){
+      useEffect(()=>{const t=setTimeout(onClose,2600);return()=>clearTimeout(t);},[]);
+      return <div style={{position:"fixed",top:56,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",borderRadius:14,padding:"10px 22px",fontSize:13,fontWeight:700,fontFamily:"'DM Sans',sans-serif",zIndex:9999,boxShadow:"0 6px 28px #7c3aed55",whiteSpace:"nowrap",animation:"toastIn 0.3s ease"}}>{msg}</div>;
+    }
+    
+    function BarcodeScanner({onResult,onClose}){
+      const videoRef=useRef();
+      const [manualCode,setManualCode]=useState("");
+      const [loading,setLoading]=useState(false);
+      const [error,setError]=useState("");
+      const [cameraActive,setCameraActive]=useState(false);
+      const streamRef=useRef();
+      const detectorRef=useRef();
+      const fetchProduct=async(barcode)=>{
+        setLoading(true);setError("");
+        try{
+          const res=await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+          const data=await res.json();
+          if(data.status===1&&data.product){
+            const p=data.product,n=p.nutriments||{};
+            onResult({name:p.product_name||p.product_name_fr||"Produit scanné",brand:p.brands||"",cat:"Scanné",emoji:"📦",p100:{cal:Math.round(n["energy-kcal_100g"]||0),p:Math.round((n.proteins_100g||0)*10)/10,c:Math.round((n.carbohydrates_100g||0)*10)/10,f:Math.round((n.fat_100g||0)*10)/10,fiber:Math.round((n.fiber_100g||0)*10)/10,sugar:Math.round((n.sugars_100g||0)*10)/10,sodium:Math.round((n.sodium_100g||0)*1000),calcium:Math.round(n.calcium_100g||0),iron:Math.round((n.iron_100g||0)*10)/10,vitC:Math.round((n["vitamin-c_100g"]||0)*1000*10)/10,vitD:Math.round((n["vitamin-d_100g"]||0)*1000000*10)/10,vitE:0,vitK:0,vitA:0,vitB12:0,magnesium:Math.round(n.magnesium_100g||0),potassium:Math.round(n.potassium_100g||0),zinc:Math.round((n.zinc_100g||0)*10)/10,selenium:0,omega3:0,folates:0,phosphorus:Math.round(n.phosphorus_100g||0)},image:p.image_small_url||null,barcode});
+          } else setError("Produit non trouvé dans Open Food Facts. Essaie un autre code-barres.");
+        }catch(e){setError("Connexion bloquée (restriction réseau du sandbox). Saisis les infos manuellement via la base de données.");}
+        setLoading(false);
+      };
+      const startCamera=async()=>{
+        try{
+          const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+          streamRef.current=stream;
+          if(videoRef.current)videoRef.current.srcObject=stream;
+          setCameraActive(true);
+          if("BarcodeDetector" in window){
+            detectorRef.current=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128"]});
+            const scan=async()=>{if(!videoRef.current||!detectorRef.current)return;try{const b=await detectorRef.current.detect(videoRef.current);if(b.length>0){stopCamera();fetchProduct(b[0].rawValue);return;}}catch(e){}requestAnimationFrame(scan);};
+            videoRef.current.onloadedmetadata=()=>scan();
+          }
+        }catch(e){setError("Impossible d'accéder à la caméra. Utilise la saisie manuelle.");}
+      };
+      const stopCamera=()=>{if(streamRef.current)streamRef.current.getTracks().forEach(t=>t.stop());setCameraActive(false);};
+      useEffect(()=>()=>{stopCamera();},[]);
+      return(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.94)",zIndex:8888,display:"flex",flexDirection:"column",padding:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#fff",letterSpacing:2}}>📷 SCANNER PRODUIT</div>
+            <button onClick={()=>{stopCamera();onClose();}} style={{background:"#1e1e2e",border:"1px solid #333",borderRadius:9,color:"#fff",padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:12}}>✕ Fermer</button>
+          </div>
+          <div style={{background:"#0a0a0a",borderRadius:14,overflow:"hidden",marginBottom:12,border:"2px solid #2a2a4e",position:"relative",height:210}}>
+            {cameraActive?(<><video ref={videoRef} autoPlay playsInline style={{width:"100%",height:"100%",objectFit:"cover"}}/><div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{width:190,height:90,border:"2px solid #8b5cf6",borderRadius:8,boxShadow:"0 0 0 2000px rgba(0,0,0,0.45)"}}/></div><div style={{position:"absolute",bottom:7,left:0,right:0,textAlign:"center",color:"#8b5cf6",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>{"BarcodeDetector" in window?"Scan automatique actif ●":"Saisir le code manuellement"}</div></>):(<div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}><div style={{fontSize:36}}>📦</div><div style={{color:"#555",fontSize:11,fontFamily:"'DM Sans',sans-serif",textAlign:"center"}}>Open Food Facts · 3M+ produits</div></div>)}
+          </div>
+          <button onClick={cameraActive?stopCamera:startCamera} style={{...SC.btn,width:"100%",background:cameraActive?"#ef4444":"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontWeight:700,marginBottom:10}}>{cameraActive?"⏹ Arrêter la caméra":"📷 Activer la caméra"}</button>
+          <div style={{...SC.card,padding:"11px"}}>
+            <div style={{color:"#666",fontSize:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,marginBottom:7}}>OU SAISIR LE CODE-BARRES MANUELLEMENT</div>
+            <div style={{display:"flex",gap:7}}>
+              <input type="text" inputMode="numeric" placeholder="ex: 3017620422003" value={manualCode} onChange={e=>setManualCode(e.target.value.replace(/\D/g,""))} style={{...SC.input,marginBottom:0,flex:1,fontSize:13,letterSpacing:1}}/>
+              <button onClick={()=>manualCode.length>=8&&fetchProduct(manualCode)} disabled={loading||manualCode.length<8} style={{...SC.btn,background:"#8b5cf6",color:"#fff",padding:"9px 13px",fontSize:13,opacity:manualCode.length<8?0.5:1}}>{loading?"…":"→"}</button>
+            </div>
+          </div>
+          {loading&&<div style={{textAlign:"center",color:"#8b5cf6",fontSize:12,fontFamily:"'DM Sans',sans-serif",marginTop:10}}>🔍 Recherche dans Open Food Facts...</div>}
+          {error&&<div style={{background:"#2a0f0f",border:"1px solid #ef4444",borderRadius:11,padding:"9px 13px",color:"#ef4444",fontSize:11,fontFamily:"'DM Sans',sans-serif",marginTop:10}}>{error}</div>}
+        </div>
+      );
+    }
+    
+    // ─── MAIN APP ────────────────────────────────────────────────────────────────
+    function Trackletics(){
+      const [screen,setScreen]=useState("onboarding");
+      const [step,setStep]=useState(0);
+      const [profile,setProfile]=useState({name:"",email:"",password:"",age:25,weight:75,height:175,sex:"M",activity:"moderate",goal:"bulk",diet:[]});
+      const [targets,setTargets]=useState(null);
+      const [customMacros,setCustomMacros]=useState(null);
+      const [tab,setTab]=useState("dashboard");
+      const [foodLog,setFoodLog]=useState({[MEALS[0]]:[],"Déjeuner":[],"Dîner":[],"Collation":[]});
+      const [activeMeal,setActiveMeal]=useState(MEALS[0]);
+      const [addingFood,setAddingFood]=useState(false);
+      const [addTab,setAddTab]=useState("db"); // db|scan|recipes
+      const [foodSearch,setFoodSearch]=useState("");
+      const [foodQty,setFoodQty]=useState({});
+      const [activeCat,setActiveCat]=useState("Tous");
+      const [showMicros,setShowMicros]=useState(null);
+      const [foodRawMode,setFoodRawMode]=useState({}); // keyed by food.id → true=raw, false=cooked
+      const [showScanner,setShowScanner]=useState(false);
+      const [scannedProduct,setScannedProduct]=useState(null);
+      const [scannedQty,setScannedQty]=useState("100");
+      const [recipeFilter,setRecipeFilter]=useState("Tous");
+      const [recipeSearch,setRecipeSearch]=useState("");
+      const [expandedRecipe,setExpandedRecipe]=useState(null);
+      const [aiRecipeResult,setAiRecipeResult]=useState(null);
+      const [aiRecipeLoading,setAiRecipeLoading]=useState(false);
+      const [recipeDiet,setRecipeDiet]=useState("standard");
+      const [workoutHistory,setWorkoutHistory]=useState([]);
+      const [showHistory,setShowHistory]=useState(false);
+      const [wkDate,setWkDate]=useState(new Date().toISOString().split("T")[0]);
+      const [wkMuscle,setWkMuscle]=useState(MUSCLE_GROUPS[0]);
+      const [wkEquip,setWkEquip]=useState(null); // selected equipment sub-group
+      const [wkNotes,setWkNotes]=useState("");
+      const [wkExercises,setWkExercises]=useState([{id:1,name:"",sets:[{r:"",w:""},{r:"",w:""},{r:"",w:""},{r:"",w:""},{r:"",w:""}]}]);
+      const [toast,setToast]=useState(null);
+      const [editProf,setEditProf]=useState(null);
+      const [editMac,setEditMac]=useState(null);
+      const [accSaved,setAccSaved]=useState(false);
+      const [aiPhotoMode,setAiPhotoMode]=useState(false);
+      const [aiPhotoResult,setAiPhotoResult]=useState(null);
+      const [aiPhotoLoading,setAiPhotoLoading]=useState(false);
+      const [photoB64,setPhotoB64]=useState(null);
+      const fileRef=useRef();
+      const [expandedMealDash,setExpandedMealDash]=useState(null);
+    
+      // ─── LOCALSTORAGE PERSISTENCE ───
+      useEffect(()=>{
+        try{
+          const p=localStorage.getItem("tk:profile");if(p){const parsed=JSON.parse(p);setProfile(parsed);}
+          const t=localStorage.getItem("tk:targets");if(t)setTargets(JSON.parse(t));
+          const cm=localStorage.getItem("tk:customMacros");if(cm)setCustomMacros(JSON.parse(cm));
+          const fl=localStorage.getItem("tk:foodLog:"+new Date().toISOString().split("T")[0]);if(fl)setFoodLog(JSON.parse(fl));
+          const wk=localStorage.getItem("tk:wk");if(wk)setWorkoutHistory(JSON.parse(wk));
+          const sc=localStorage.getItem("tk:screen");if(sc==="app")setScreen("app");
+        }catch(e){}
+      },[]);
+    
+      useEffect(()=>{try{localStorage.setItem("tk:profile",JSON.stringify(profile));}catch(e){};},[profile]);
+      useEffect(()=>{try{if(targets)localStorage.setItem("tk:targets",JSON.stringify(targets));}catch(e){};},[targets]);
+      useEffect(()=>{try{if(customMacros)localStorage.setItem("tk:customMacros",JSON.stringify(customMacros));else localStorage.removeItem("tk:customMacros");}catch(e){};},[customMacros]);
+      useEffect(()=>{try{localStorage.setItem("tk:foodLog:"+new Date().toISOString().split("T")[0],JSON.stringify(foodLog));}catch(e){};},[foodLog]);
+      useEffect(()=>{try{localStorage.setItem("tk:screen",screen);}catch(e){};},[screen]);
+    
+      const saveHistory=async(h)=>{try{localStorage.setItem("tk:wk",JSON.stringify(h));}catch(e){}};
+      const showToast=msg=>setToast(msg);
+      const effectiveMacros=customMacros||targets;
+      const totalCal=Object.values(foodLog).flat().reduce((s,e)=>s+e.cal,0);
+      const totalP=Math.round(Object.values(foodLog).flat().reduce((s,e)=>s+e.protein,0));
+      const totalC=Math.round(Object.values(foodLog).flat().reduce((s,e)=>s+e.carbs,0));
+      const totalF=Math.round(Object.values(foodLog).flat().reduce((s,e)=>s+e.fat,0));
+      const remaining=(effectiveMacros?.tdee||0)-totalCal;
+      const goalLabel=GOALS.find(g=>g.id===profile.goal)?.label;
+      const wkTotalReps=wkExercises.reduce((s,ex)=>s+ex.sets.reduce((ss,set)=>ss+(parseInt(set.r)||0),0),0);
+      const wkTotalVol=Math.round(wkExercises.reduce((s,ex)=>s+ex.sets.reduce((ss,set)=>ss+(parseInt(set.r)||0)*(parseFloat(set.w)||0),0),0));
+      // Equipment sub-groups for selected muscle
+      const equipGroups=EXERCISES_BY_GROUP[wkMuscle]?Object.keys(EXERCISES_BY_GROUP[wkMuscle]):[];
+      const currentEquip=wkEquip&&equipGroups.includes(wkEquip)?wkEquip:equipGroups[0];
+      const exerciseList=EXERCISES_BY_GROUP[wkMuscle]?EXERCISES_BY_GROUP[wkMuscle][currentEquip]||[]:[];
+    
+      const finishOnboarding=()=>{const t=calcTDEE(profile);setTargets(t);setEditProf({...profile});setEditMac({...t});setScreen("app");};
+    
+      const callAI=async(prompt,img=null)=>{
+        const messages=img?[{role:"user",content:[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:img}},{type:"text",text:prompt}]}]:[{role:"user",content:prompt}];
+        const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1500,messages})});
+        const d=await res.json();return d.content?.[0]?.text||"";
+      };
+    
+      // ─── ONBOARDING ───
+      const onboardSteps=[
+        <div key="s0" style={SC.stepWrap}>
+          <div style={{fontSize:54,marginBottom:5}}>👋</div>
+          <h2 style={SC.h2}>Bienvenue sur</h2>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:44,letterSpacing:4,color:"#8b5cf6",marginBottom:4}}>TRACKLETICS</div>
+          <p style={SC.p}>Track your food. Train smarter. Build champions.</p>
+          <input style={SC.input} placeholder="Ton prénom" value={profile.name} onChange={e=>setProfile(p=>({...p,name:e.target.value}))}/>
+          <input style={SC.input} placeholder="Email" value={profile.email} onChange={e=>setProfile(p=>({...p,email:e.target.value}))}/>
+          <input style={SC.input} type="password" placeholder="Mot de passe" value={profile.password} onChange={e=>setProfile(p=>({...p,password:e.target.value}))}/>
+          <div style={{display:"flex",gap:10,marginTop:2}}>{[{v:"M",l:"Homme"},{v:"F",l:"Femme"}].map(s=><button key={s.v} onClick={()=>setProfile(p=>({...p,sex:s.v}))} style={{...SC.btn,flex:1,background:profile.sex===s.v?"#8b5cf6":"#1e1e2e",color:profile.sex===s.v?"#fff":"#888"}}>{s.l}</button>)}</div>
+        </div>,
+        <div key="s1" style={SC.stepWrap}>
+          <div style={{fontSize:46,marginBottom:5}}>📊</div><h2 style={SC.h2}>Tes statistiques</h2>
+          {[{label:"Âge",key:"age",unit:"ans",min:10,max:80},{label:"Poids",key:"weight",unit:"kg",min:30,max:200},{label:"Taille",key:"height",unit:"cm",min:140,max:220}].map(f=>(
+            <div key={f.key} style={{marginBottom:13}}><label style={{color:"#888",fontSize:11,fontFamily:"'DM Sans',sans-serif",letterSpacing:1}}>{f.label.toUpperCase()}</label><div style={{display:"flex",alignItems:"center",gap:10,marginTop:4}}><input type="range" min={f.min} max={f.max} value={profile[f.key]} onChange={e=>setProfile(p=>({...p,[f.key]:+e.target.value}))} style={{flex:1,accentColor:"#8b5cf6"}}/><span style={{color:"#fff",fontSize:16,fontWeight:700,fontFamily:"'Bebas Neue',sans-serif",minWidth:62,textAlign:"right"}}>{profile[f.key]} <span style={{fontSize:10,color:"#555"}}>{f.unit}</span></span></div></div>
+          ))}
+        </div>,
+        <div key="s2" style={SC.stepWrap}><div style={{fontSize:46,marginBottom:5}}>🎯</div><h2 style={SC.h2}>Ton objectif</h2>{GOALS.map(g=><div key={g.id} onClick={()=>setProfile(p=>({...p,goal:g.id}))} style={{...SC.card,background:profile.goal===g.id?"#1a0f2e":"#111",border:`1.5px solid ${profile.goal===g.id?"#8b5cf6":"#222"}`,cursor:"pointer",marginBottom:8}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:22}}>{g.icon}</span><div><div style={{color:"#fff",fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{g.label}</div><div style={{color:"#666",fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>{g.desc}</div></div>{profile.goal===g.id&&<div style={{marginLeft:"auto",color:"#8b5cf6"}}>✓</div>}</div></div>)}</div>,
+        <div key="s3" style={SC.stepWrap}><div style={{fontSize:46,marginBottom:5}}>🏃</div><h2 style={SC.h2}>Niveau d'activité</h2>{ACTIVITY.map(a=><div key={a.id} onClick={()=>setProfile(p=>({...p,activity:a.id}))} style={{...SC.card,background:profile.activity===a.id?"#1a0f2e":"#111",border:`1.5px solid ${profile.activity===a.id?"#8b5cf6":"#222"}`,cursor:"pointer",marginBottom:7,padding:"9px 12px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{color:"#fff",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{a.label}</div><div style={{color:"#555",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>{a.desc}</div></div>{profile.activity===a.id&&<div style={{color:"#8b5cf6"}}>✓</div>}</div></div>)}</div>,
+        <div key="s4" style={SC.stepWrap}><div style={{fontSize:46,marginBottom:5}}>🥗</div><h2 style={SC.h2}>Préférences alimentaires</h2>{["Végan","Végétarien","Sans gluten","Sans lactose","Halal","Aucune restriction"].map(d=><div key={d} onClick={()=>setProfile(p=>{const diets=p.diet.includes(d)?p.diet.filter(x=>x!==d):[...p.diet.filter(x=>x!=="Aucune restriction"),d];return{...p,diet:d==="Aucune restriction"?["Aucune restriction"]:diets};})} style={{...SC.card,background:profile.diet.includes(d)?"#1a0f2e":"#111",border:`1.5px solid ${profile.diet.includes(d)?"#8b5cf6":"#222"}`,cursor:"pointer",marginBottom:7,padding:"8px 12px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{color:"#fff",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>{d}</span>{profile.diet.includes(d)&&<span style={{color:"#8b5cf6"}}>✓</span>}</div></div>)}</div>
+      ];
+    
+      if(screen==="onboarding") return(
+        <div style={SC.app}><style>{CSS}</style>
+          <div style={{maxWidth:420,width:"100%",margin:"0 auto",padding:"20px 16px",minHeight:"100vh",display:"flex",flexDirection:"column"}}>
+            <div style={{display:"flex",gap:5,marginBottom:24}}>{onboardSteps.map((_,i)=><div key={i} style={{height:3,flex:1,borderRadius:2,background:i<=step?"#8b5cf6":"#222",transition:"background 0.3s"}}/>)}</div>
+            <div style={{flex:1}}>{onboardSteps[step]}</div>
+            <div style={{display:"flex",gap:10,marginTop:16}}>
+              {step>0&&<button onClick={()=>setStep(s=>s-1)} style={{...SC.btn,flex:0.4,background:"#1a1a2e",color:"#888"}}>← Retour</button>}
+              <button onClick={()=>step===onboardSteps.length-1?finishOnboarding():setStep(s=>s+1)} style={{...SC.btn,flex:1,background:"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontWeight:700}}>{step===onboardSteps.length-1?"🚀 Commencer":"Continuer →"}</button>
+            </div>
+          </div>
+        </div>
+      );
+    
+      // ─── FOOD HELPERS ───
+      // rawCoeff: for cereals/legumes > 1 (dry→cooked, e.g. rice 2.5), for meat/fish < 1 (raw→cooked, e.g. chicken 0.75)
+      // When user inputs raw weight:
+      //   - cereal/legume (rawCoeff > 1): effectiveCookedQty = rawQty * rawCoeff (more weight after cooking)
+      //   - meat/fish (rawCoeff < 1): effectiveCookedQty = rawQty * rawCoeff (loses weight after cooking)
+      // macros are always expressed per 100g COOKED → we calculate on effectiveCookedQty
+      const addFoodItem=(food,qty,useRaw=false)=>{
+        const coeff = food.rawCoeff || 1;
+        const isRaw = useRaw && !!food.rawCoeff;
+        const effectiveQty = isRaw ? qty * coeff : qty; // convert to cooked equivalent
+        const r = effectiveQty / 100;
+        const rawLabel = isRaw ? ` (${qty}g cru)` : "";
+        const isCerealType = food.rawCoeff && food.rawCoeff > 1;
+        const rawHint = isRaw
+          ? isCerealType
+            ? `Pesé cru: ${qty}g → ~${Math.round(effectiveQty)}g cuit`
+            : `Pesé cru: ${qty}g → ~${Math.round(effectiveQty)}g cuit`
+          : null;
+        setFoodLog(l=>({...l,[activeMeal]:[...l[activeMeal],{
+          id:Date.now(),
+          name:food.name+(food.brand?` (${food.brand})`:""),
+          emoji:food.emoji,
+          rawLabel:rawLabel||"",
+          rawHint:rawHint||null,
+          displayQty: isRaw ? `${qty}g cru` : `${qty}g`,
+          cal:Math.round((food.p100.cal||0)*r),
+          protein:+(((food.p100.p||0)*r).toFixed(1)),
+          carbs:+(((food.p100.c||0)*r).toFixed(1)),
+          fat:+(((food.p100.f||0)*r).toFixed(1)),
+          fiber:+(((food.p100.fiber||0)*r).toFixed(1)),
+          sodium:Math.round((food.p100.sodium||0)*r),
+          calcium:Math.round((food.p100.calcium||0)*r),
+          iron:+(((food.p100.iron||0)*r).toFixed(1)),
+          vitC:+(((food.p100.vitC||0)*r).toFixed(1)),
+          vitD:+(((food.p100.vitD||0)*r).toFixed(1)),
+          vitE:+(((food.p100.vitE||0)*r).toFixed(1)),
+          vitK:+(((food.p100.vitK||0)*r).toFixed(1)),
+          magnesium:Math.round((food.p100.magnesium||0)*r),
+          potassium:Math.round((food.p100.potassium||0)*r),
+          phosphorus:Math.round((food.p100.phosphorus||0)*r),
+          zinc:+(((food.p100.zinc||0)*r).toFixed(1)),
+          selenium:+(((food.p100.selenium||0)*r).toFixed(1)),
+          omega3:+(((food.p100.omega3||0)*r).toFixed(2)),
+          folates:Math.round((food.p100.folates||0)*r),
+          qty:Math.round(effectiveQty),
+        }]}));
+        setAddingFood(false);setFoodSearch("");setFoodQty({});setFoodRawMode({});setScannedProduct(null);
+        showToast(`✅ ${food.name}${rawLabel} ajouté à ${activeMeal}`);
+      };
+      const addRecipeToMeal=(recipe,meal)=>{
+        setFoodLog(l=>({...l,[meal]:[...l[meal],{id:Date.now(),name:`🍽️ ${recipe.name}`,emoji:recipe.emoji,cal:recipe.cal,protein:recipe.p,carbs:recipe.c,fat:recipe.f,fiber:0,sodium:0,calcium:0,iron:0,vitC:0,vitD:0,magnesium:0,qty:1}]}));
+        showToast(`✅ ${recipe.name} ajouté à ${meal}`);
+      };
+      const filteredDB=FOOD_DB.filter(f=>{const mc=activeCat==="Tous"||f.cat===activeCat;const ms=!foodSearch||f.name.toLowerCase().includes(foodSearch.toLowerCase())||f.cat.toLowerCase().includes(foodSearch.toLowerCase());return mc&&ms;});
+    
+      // ─── DASHBOARD ───
+      const renderDash=()=>(
+        <div style={SC.tab}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <div><div style={{color:"#888",fontSize:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:1}}>BONJOUR</div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:"#fff",letterSpacing:2}}>{profile.name||"Champion"} 👊</div></div>
+            <div style={{background:"#1a0f2e",border:"1.5px solid #8b5cf6",borderRadius:11,padding:"4px 10px",fontSize:10,color:"#8b5cf6",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{goalLabel}</div>
+          </div>
+          {effectiveMacros&&<div style={{...SC.card,textAlign:"center",padding:"18px 14px"}}><MacroRing cal={totalCal} goal={effectiveMacros.tdee} protein={totalP} carbs={totalC} fat={totalF} gProtein={effectiveMacros.protein} gCarbs={effectiveMacros.carbs} gFat={effectiveMacros.fat}/></div>}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,margin:"8px 0"}}>
+            {[{label:"Restant",val:`${Math.max(0,remaining)} kcal`,color:"#10b981",icon:"📉"},{label:"Objectif",val:`${effectiveMacros?.tdee||0} kcal`,color:"#8b5cf6",icon:"🎯"}].map(s=>(
+              <div key={s.label} style={{...SC.card,padding:"11px"}}><div style={{fontSize:15,marginBottom:2}}>{s.icon}</div><div style={{color:s.color,fontSize:14,fontWeight:800,fontFamily:"'Bebas Neue',sans-serif"}}>{s.val}</div><div style={{color:"#555",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>{s.label}</div></div>
+            ))}
+          </div>
+          <div style={SC.card}>
+            <div style={{...SC.h3,marginBottom:8}}>Repas d'aujourd'hui</div>
+            {MEALS.map(meal=>{
+              const entries = foodLog[meal];
+              const mc = entries.reduce((s,e)=>s+e.cal,0);
+              const mp = Math.round(entries.reduce((s,e)=>s+(e.protein||0),0)*10)/10;
+              const mgl = Math.round(entries.reduce((s,e)=>s+(e.carbs||0),0)*10)/10;
+              const ml = Math.round(entries.reduce((s,e)=>s+(e.fat||0),0)*10)/10;
+              const mf = Math.round(entries.reduce((s,e)=>s+(e.fiber||0),0)*10)/10;
+              const mna = Math.round(entries.reduce((s,e)=>s+(e.sodium||0),0));
+              const mca = Math.round(entries.reduce((s,e)=>s+(e.calcium||0),0));
+              const mfe = Math.round(entries.reduce((s,e)=>s+(e.iron||0),0)*10)/10;
+              const mvc = Math.round(entries.reduce((s,e)=>s+(e.vitC||0),0)*10)/10;
+              const mvd = Math.round(entries.reduce((s,e)=>s+(e.vitD||0),0)*10)/10;
+              const mmg = Math.round(entries.reduce((s,e)=>s+(e.magnesium||0),0));
+              const mk = Math.round(entries.reduce((s,e)=>s+(e.potassium||0),0));
+              const mzn = Math.round(entries.reduce((s,e)=>s+(e.zinc||0),0)*10)/10;
+              const mse = Math.round(entries.reduce((s,e)=>s+(e.selenium||0),0)*10)/10;
+              const mo3 = Math.round(entries.reduce((s,e)=>s+(e.omega3||0),0)*100)/100;
+              const isExpanded = expandedMealDash === meal;
+              return(
+                <div key={meal} style={{borderBottom:"1px solid #1a1a2e"}}>
+                  <div onClick={()=>mc>0&&setExpandedMealDash(isExpanded?null:meal)}
+                    style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",cursor:mc>0?"pointer":"default"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{width:6,height:6,borderRadius:"50%",background:mc>0?"#8b5cf6":"#333"}}/>
+                      <span style={{color:mc>0?"#fff":"#444",fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>{meal}</span>
+                      {mc>0&&<span style={{color:"#333",fontSize:9}}>
+                        {isExpanded?"▲":"▼"}
+                      </span>}
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      {mc>0&&<span style={{color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>P:{mp}g G:{mgl}g L:{ml}g</span>}
+                      <span style={{color:mc>0?"#8b5cf6":"#333",fontSize:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{mc>0?`${mc} kcal`:"—"}</span>
+                    </div>
+                  </div>
+                  {isExpanded&&mc>0&&(
+                    <div style={{background:"#0a0a0a",borderRadius:10,padding:"10px",marginBottom:8}}>
+                      {/* Items list */}
+                      <div style={{marginBottom:8}}>
+                        {entries.map(e=>(
+                          <div key={e.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",borderBottom:"1px solid #111"}}>
+                            <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                              <span style={{fontSize:12}}>{e.emoji}</span>
+                              <div>
+                                <span style={{color:"#ccc",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>{e.name}</span>
+                                {e.rawHint&&<span style={{color:"#6366f1",fontSize:8,fontFamily:"'DM Sans',sans-serif",marginLeft:4}}>· cru</span>}
+                              </div>
+                            </div>
+                            <span style={{color:"#8b5cf6",fontSize:9,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{e.cal}kcal</span>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Macros */}
+                      <div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,marginBottom:5}}>MACRONUTRIMENTS</div>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:4,marginBottom:10}}>
+                        {[
+                          {l:"Calories",v:`${mc}`,u:"kcal",c:"#8b5cf6"},
+                          {l:"Protéines",v:`${mp}`,u:"g",c:"#8b5cf6"},
+                          {l:"Glucides",v:`${mgl}`,u:"g",c:"#3b82f6"},
+                          {l:"Lipides",v:`${ml}`,u:"g",c:"#f59e0b"},
+                          {l:"Fibres",v:`${mf}`,u:"g",c:"#22c55e"},
+                        ].map(m=>(
+                          <div key={m.l} style={{background:"#111",borderRadius:6,padding:"5px 4px",textAlign:"center"}}>
+                            <div style={{color:m.c,fontSize:11,fontWeight:700,fontFamily:"'Bebas Neue',sans-serif",letterSpacing:0.5}}>{m.v}<span style={{fontSize:7,color:m.c+"99"}}>{m.u}</span></div>
+                            <div style={{color:"#444",fontSize:7,fontFamily:"'DM Sans',sans-serif"}}>{m.l}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Micros */}
+                      <div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,marginBottom:5}}>MICRONUTRIMENTS</div>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 10px"}}>
+                        {[
+                          {l:"Sodium",v:mna,u:"mg",c:"#ef4444"},
+                          {l:"Calcium",v:mca,u:"mg",c:"#60a5fa"},
+                          {l:"Fer",v:mfe,u:"mg",c:"#f97316"},
+                          {l:"Vit C",v:mvc,u:"mg",c:"#fbbf24"},
+                          {l:"Vit D",v:mvd,u:"μg",c:"#a78bfa"},
+                          {l:"Magnésium",v:mmg,u:"mg",c:"#34d399"},
+                          {l:"Potassium",v:mk,u:"mg",c:"#f472b6"},
+                          {l:"Zinc",v:mzn,u:"mg",c:"#94a3b8"},
+                          {l:"Sélénium",v:mse,u:"μg",c:"#fcd34d"},
+                          {l:"Oméga-3",v:mo3,u:"g",c:"#38bdf8"},
+                        ].map(m=>(
+                          <div key={m.l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"1px 0"}}>
+                            <span style={{color:"#444",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>{m.l}</span>
+                            <span style={{color:m.c,fontSize:9,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{m.v}{m.u}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Quick access button */}
+                      <button onClick={()=>{setTab("nutrition");setActiveMeal(meal);}} style={{...SC.btn,width:"100%",background:"#1a0f2e",color:"#8b5cf6",border:"1px solid #2a1a4e",fontSize:10,padding:"6px",marginTop:8}}>
+                        ✏️ Modifier ce repas
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <StepCounter/>
+          {workoutHistory.length>0&&<div style={SC.card}><div style={{...SC.h3,marginBottom:5}}>Dernière séance 💪</div><div style={{color:"#8b5cf6",fontWeight:700,fontFamily:"'DM Sans',sans-serif",fontSize:12}}>{workoutHistory[0].muscle}</div><div style={{color:"#555",fontSize:10,fontFamily:"'DM Sans',sans-serif",marginTop:2}}>{workoutHistory[0].exercises?.length||0} exercice(s) · {workoutHistory[0].date} · {workoutHistory[0].totalVol} kg</div></div>}
+        </div>
+      );
+    
+      // ─── NUTRITION ───
+      const renderNutrition=()=>(
+        <div style={SC.tab}>
+          <div style={{...SC.h2,marginBottom:9}}>🥗 Nutrition</div>
+          <div style={{display:"flex",gap:5,overflowX:"auto",marginBottom:9,paddingBottom:2}}>
+            {MEALS.map(m=><button key={m} onClick={()=>setActiveMeal(m)} style={{...SC.btn,padding:"4px 9px",fontSize:10,whiteSpace:"nowrap",flex:"0 0 auto",background:activeMeal===m?"#8b5cf6":"#111",color:activeMeal===m?"#fff":"#666",border:`1px solid ${activeMeal===m?"#8b5cf6":"#222"}`}}>{m}</button>)}
+          </div>
+          <div style={SC.card}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+              <div style={SC.h3}>{activeMeal}</div>
+              <button onClick={()=>setAddingFood(!addingFood)} style={{background:addingFood?"#ef4444":"#8b5cf6",color:"#fff",border:"none",borderRadius:7,padding:"4px 11px",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{addingFood?"✕ Fermer":"+ Ajouter"}</button>
+            </div>
+            {foodLog[activeMeal].length===0&&!addingFood&&<div style={{color:"#333",fontSize:11,fontFamily:"'DM Sans',sans-serif",textAlign:"center",padding:"10px 0"}}>Aucun aliment · clique + Ajouter</div>}
+            {foodLog[activeMeal].map(e=>(
+              <div key={e.id} style={{borderTop:"1px solid #1a1a2e",padding:"6px 0"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{display:"flex",gap:6,alignItems:"center",flex:1}}><span style={{fontSize:14}}>{e.emoji}</span><div style={{flex:1}}>
+                    <div style={{color:"#ddd",fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>{e.name}</div>
+                    <div style={{color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>
+                      {e.displayQty||`${e.qty}g`} · P:{e.protein}g G:{e.carbs}g L:{e.fat}g{e.fiber>0?` F:${e.fiber}g`:""}
+                    </div>
+                    {e.rawHint&&<div style={{color:"#6366f1",fontSize:8,fontFamily:"'DM Sans',sans-serif",marginTop:1}}>🌾 {e.rawHint}</div>}
+                  </div></div>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{color:"#8b5cf6",fontWeight:700,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>{e.cal}kcal</span><button onClick={()=>setFoodLog(l=>({...l,[activeMeal]:l[activeMeal].filter(x=>x.id!==e.id)}))} style={{background:"none",border:"none",color:"#333",cursor:"pointer",fontSize:13}}>✕</button></div>
+                </div>
+              </div>
+            ))}
+            {foodLog[activeMeal].length>0&&<div style={{borderTop:"1px solid #1e1e2e",paddingTop:6,marginTop:3,display:"flex",justifyContent:"space-between"}}><span style={{color:"#444",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>Total repas</span><span style={{color:"#8b5cf6",fontWeight:700,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>{foodLog[activeMeal].reduce((s,e)=>s+e.cal,0)} kcal</span></div>}
+    
+            {addingFood&&(
+              <div style={{marginTop:10}}>
+                {/* Sub-tabs */}
+                <div style={{display:"flex",gap:5,marginBottom:10,background:"#0f0f1a",borderRadius:9,padding:3}}>
+                  {[{id:"db",label:"📚 Base"},{id:"scan",label:"📷 Scanner"},{id:"recipes",label:"🍽️ Recettes"}].map(t=><button key={t.id} onClick={()=>setAddTab(t.id)} style={{...SC.btn,flex:1,padding:"5px 6px",fontSize:10,background:addTab===t.id?"#8b5cf6":"transparent",color:addTab===t.id?"#fff":"#555",borderRadius:7}}>{t.label}</button>)}
+                </div>
+    
+                {/* ── DATABASE ── */}
+                {addTab==="db"&&(<>
+                  {/* AI Photo */}
+                  <div style={{...SC.card,background:"linear-gradient(135deg,#1a0f2e,#0f0f1a)",border:"1px solid #2a1a4e",marginBottom:9,padding:"10px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:"#8b5cf6",letterSpacing:1}}>📸 IA Photo</div><div style={{color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>Analyse ton repas en photo</div></div>
+                      <button onClick={()=>setAiPhotoMode(!aiPhotoMode)} style={{background:"#8b5cf6",color:"#fff",border:"none",borderRadius:7,padding:"4px 10px",fontSize:10,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{aiPhotoMode?"Fermer":"Ouvrir"}</button>
+                    </div>
+                    {aiPhotoMode&&(<div>
+                      <input type="file" ref={fileRef} accept="image/*" style={{display:"none"}} onChange={e=>{const file=e.target.files[0];if(!file)return;const rd=new FileReader();rd.onload=ev=>setPhotoB64(ev.target.result.split(",")[1]);rd.readAsDataURL(file);}}/>
+                      <button onClick={()=>fileRef.current.click()} style={{...SC.btn,width:"100%",background:"#1e1e2e",color:"#aaa",marginBottom:6,fontSize:11}}>{photoB64?"✅ Photo chargée":"📁 Choisir une photo"}</button>
+                      {photoB64&&<button onClick={async()=>{setAiPhotoLoading(true);try{const t=await callAI(`Analyse ce repas en photo. Réponds en JSON uniquement (sans markdown): {"meal_name":"nom","total_calories":number,"items":[{"name":"aliment","quantity":"quantité","calories":number,"protein":number,"carbs":number,"fat":number}],"confidence":"low/medium/high","note":"bref commentaire"}`,photoB64);setAiPhotoResult(JSON.parse(t.replace(/```json|```/g,"").trim()));}catch(e){setAiPhotoResult({error:true,message:"Analyse impossible."});}setAiPhotoLoading(false);}} disabled={aiPhotoLoading} style={{...SC.btn,width:"100%",background:"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontSize:11}}>{aiPhotoLoading?"🤖 Analyse...":"🔍 Analyser"}</button>}
+                      {aiPhotoResult&&!aiPhotoResult.error&&(<div style={{marginTop:9,background:"#0f0f1a",borderRadius:9,padding:10}}>
+                        <div style={{fontWeight:700,color:"#fff",fontFamily:"'DM Sans',sans-serif",marginBottom:5,fontSize:12}}>{aiPhotoResult.meal_name}</div>
+                        <div style={{display:"flex",gap:9,marginBottom:7}}>{[{l:"Calories",v:`${aiPhotoResult.total_calories}kcal`,c:"#8b5cf6"},{l:"Confiance",v:aiPhotoResult.confidence,c:"#10b981"}].map(x=><div key={x.l} style={{flex:1,background:"#1a1a2e",borderRadius:7,padding:"6px",textAlign:"center"}}><div style={{color:x.c,fontSize:12,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{x.v}</div><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>{x.l}</div></div>)}</div>
+                        {aiPhotoResult.items?.map((it,i)=><div key={i} style={{borderTop:"1px solid #1e1e2e",paddingTop:4,marginTop:4}}><div style={{color:"#ccc",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>{it.name} · {it.quantity}</div><div style={{color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>P:{it.protein}g G:{it.carbs}g L:{it.fat}g</div></div>)}
+                        {aiPhotoResult.note&&<div style={{color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif",marginTop:5,fontStyle:"italic"}}>{aiPhotoResult.note}</div>}
+                      </div>)}
+                      {aiPhotoResult?.error&&<div style={{color:"#ef4444",fontSize:10,fontFamily:"'DM Sans',sans-serif",marginTop:5}}>{aiPhotoResult.message}</div>}
+                    </div>)}
+                  </div>
+    
+                  <input style={{...SC.input,marginBottom:7}} placeholder={`🔍 Rechercher parmi ${FOOD_DB.length} aliments...`} value={foodSearch} onChange={e=>setFoodSearch(e.target.value)}/>
+                  <div style={{display:"flex",gap:4,overflowX:"auto",marginBottom:8,paddingBottom:2}}>
+                    {["Tous",...FOOD_CATS].map(c=><button key={c} onClick={()=>setActiveCat(c)} style={{...SC.btn,padding:"2px 7px",fontSize:9,whiteSpace:"nowrap",flex:"0 0 auto",background:activeCat===c?"#8b5cf6":"#1e1e2e",color:activeCat===c?"#fff":"#555",border:`1px solid ${activeCat===c?"#8b5cf6":"#2a2a4e"}`}}>{c}</button>)}
+                  </div>
+                  <div style={{maxHeight:300,overflowY:"auto"}}>
+                    {filteredDB.slice(0,50).map(food=>{
+                      const isRaw = !!foodRawMode[food.id];
+                      const hasRaw = !!food.rawCoeff;
+                      const isCerealType = hasRaw && food.rawCoeff > 1;
+                      const rawCoeffLabel = hasRaw
+                        ? isCerealType
+                          ? `÷${food.rawCoeff} cuit`
+                          : `×${(1/food.rawCoeff).toFixed(2)} cru`
+                        : null;
+                      return (
+                      <div key={food.id} style={{borderTop:"1px solid #1a1a2e",padding:"7px 2px"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div style={{display:"flex",gap:6,alignItems:"center",flex:1}}>
+                            <span style={{fontSize:14}}>{food.emoji}</span>
+                            <div style={{flex:1}}>
+                              <div style={{color:"#ddd",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>{food.name}</div>
+                              <div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>
+                                {food.p100.cal}kcal · P:{food.p100.p}g G:{food.p100.c}g L:{food.p100.f}g /100g cuit
+                              </div>
+                              {hasRaw&&isRaw&&(
+                                <div style={{color:"#6366f1",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>
+                                  🌾 {isCerealType?"Poids à saisir CRU (sec) — converti automatiquement":"Poids à saisir CRU — converti automatiquement"}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div style={{display:"flex",gap:4,alignItems:"center",flexShrink:0}}>
+                            <button onClick={()=>setShowMicros(showMicros===food.id?null:food.id)} style={{background:"#1a1a2e",border:"1px solid #2a2a4e",borderRadius:4,color:"#666",fontSize:8,cursor:"pointer",padding:"2px 5px"}}>🔬</button>
+                            {hasRaw&&(
+                              <button onClick={()=>setFoodRawMode(m=>({...m,[food.id]:!m[food.id]}))}
+                                style={{background:isRaw?"#312e81":"#1a1a2e",border:`1px solid ${isRaw?"#6366f1":"#2a2a4e"}`,borderRadius:4,color:isRaw?"#a5b4fc":"#555",fontSize:8,cursor:"pointer",padding:"2px 5px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,whiteSpace:"nowrap"}}>
+                                {isRaw?"🌾 CRU":"🍳 CUIT"}
+                              </button>
+                            )}
+                            <input type="number" placeholder={isRaw?"g cru":"100"} value={foodQty[food.id]||""} onChange={e=>setFoodQty(q=>({...q,[food.id]:e.target.value}))} style={{...SC.input,width:52,padding:"3px 5px",fontSize:10,marginBottom:0}}/>
+                            <button onClick={()=>addFoodItem(food,+(foodQty[food.id]||100),isRaw)} style={{background:"#8b5cf6",color:"#fff",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:12,fontWeight:700}}>+</button>
+                          </div>
+                        </div>
+                        {showMicros===food.id&&(
+                          <div style={{background:"#0f0f1a",borderRadius:9,padding:"8px 10px",marginTop:6,display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 10px"}}>
+                            {[
+                              {l:"Fibres",v:food.p100.fiber,u:"g",c:"#22c55e"},{l:"Sucres",v:food.p100.sugar,u:"g",c:"#f59e0b"},
+                              {l:"Sodium",v:food.p100.sodium,u:"mg",c:"#ef4444"},{l:"Calcium",v:food.p100.calcium,u:"mg",c:"#60a5fa"},
+                              {l:"Fer",v:food.p100.iron,u:"mg",c:"#f97316"},{l:"Vit C",v:food.p100.vitC,u:"mg",c:"#fbbf24"},
+                              {l:"Vit D",v:food.p100.vitD,u:"μg",c:"#a78bfa"},{l:"Vit E",v:food.p100.vitE,u:"mg",c:"#fb923c"},
+                              {l:"Vit K",v:food.p100.vitK,u:"μg",c:"#86efac"},{l:"Vit A",v:food.p100.vitA,u:"μg",c:"#fde68a"},
+                              {l:"Vit B12",v:food.p100.vitB12,u:"μg",c:"#c4b5fd"},{l:"Folates",v:food.p100.folates,u:"μg",c:"#6ee7b7"},
+                              {l:"Magnésium",v:food.p100.magnesium,u:"mg",c:"#34d399"},{l:"Potassium",v:food.p100.potassium,u:"mg",c:"#f472b6"},
+                              {l:"Zinc",v:food.p100.zinc,u:"mg",c:"#94a3b8"},{l:"Sélénium",v:food.p100.selenium,u:"μg",c:"#fcd34d"},
+                              {l:"Oméga-3",v:food.p100.omega3,u:"g",c:"#38bdf8"},{l:"Phosphore",v:food.p100.phosphorus,u:"mg",c:"#a3e635"},
+                            ].map(m=><div key={m.l} style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>{m.l}</span><span style={{color:m.c,fontSize:9,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{m.v}{m.u}</span></div>)}
+                          </div>
+                        )}
+                      </div>
+                    );})}
+                    {filteredDB.length===0&&<div style={{color:"#333",fontSize:11,fontFamily:"'DM Sans',sans-serif",textAlign:"center",padding:"14px"}}>Aucun résultat</div>}
+                  </div>
+                </>)}
+    
+                {/* ── SCANNER ── */}
+                {addTab==="scan"&&(<div>
+                  <div style={{background:"linear-gradient(135deg,#1a0f2e,#0f0f1a)",borderRadius:11,padding:"12px",marginBottom:10,textAlign:"center",border:"1px solid #2a1a4e"}}>
+                    <div style={{fontSize:32,marginBottom:5}}>📦</div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#8b5cf6",letterSpacing:1,marginBottom:3}}>SCANNER CODE-BARRES</div>
+                    <div style={{color:"#555",fontSize:10,fontFamily:"'DM Sans',sans-serif",marginBottom:10}}>Open Food Facts · 3M+ produits de supermarché</div>
+                    <button onClick={()=>setShowScanner(true)} style={{...SC.btn,background:"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontWeight:700,fontSize:12,padding:"10px 22px"}}>📷 Ouvrir le Scanner</button>
+                  </div>
+                  {scannedProduct&&(<div style={{...SC.card,border:"1.5px solid #8b5cf6"}}>
+                    <div style={{display:"flex",gap:9,alignItems:"flex-start",marginBottom:9}}>
+                      {scannedProduct.image&&<img src={scannedProduct.image} alt="" style={{width:48,height:48,objectFit:"contain",borderRadius:7,background:"#fff"}}/>}
+                      <div style={{flex:1}}><div style={{color:"#fff",fontSize:12,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{scannedProduct.name}</div>{scannedProduct.brand&&<div style={{color:"#555",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>{scannedProduct.brand}</div>}<div style={{color:"#8b5cf6",fontSize:9,fontFamily:"'DM Sans',sans-serif",marginTop:2}}>Code: {scannedProduct.barcode}</div></div>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:9}}>
+                      {[{l:"Cal",v:scannedProduct.p100.cal,u:"kcal",c:"#8b5cf6"},{l:"Prot.",v:scannedProduct.p100.p,u:"g",c:"#8b5cf6"},{l:"Glu.",v:scannedProduct.p100.c,u:"g",c:"#3b82f6"},{l:"Lip.",v:scannedProduct.p100.f,u:"g",c:"#f59e0b"}].map(m=>(
+                        <div key={m.l} style={{background:"#0f0f1a",borderRadius:7,padding:"5px",textAlign:"center"}}><div style={{color:m.c,fontSize:12,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{m.v}</div><div style={{color:"#444",fontSize:7,fontFamily:"'DM Sans',sans-serif"}}>{m.u}/100g</div></div>
+                      ))}
+                    </div>
+                    <div style={{display:"flex",gap:7,alignItems:"center"}}>
+                      <input type="number" placeholder="100g" value={scannedQty} onChange={e=>setScannedQty(e.target.value)} style={{...SC.input,marginBottom:0,flex:1}}/>
+                      <button onClick={()=>addFoodItem(scannedProduct,+scannedQty||100)} style={{...SC.btn,background:"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontWeight:700,padding:"9px 14px",fontSize:12}}>+ Ajouter</button>
+                    </div>
+                  </div>)}
+                </div>)}
+    
+                {/* ── RECIPES ── */}
+                {addTab==="recipes"&&(<div>
+                  <input style={{...SC.input,marginBottom:7}} placeholder="🔍 Rechercher une recette..." value={recipeSearch} onChange={e=>setRecipeSearch(e.target.value)}/>
+                  <div style={{display:"flex",gap:4,overflowX:"auto",marginBottom:8,paddingBottom:2}}>
+                    {["Tous","Petit-déjeuner","Déjeuner","Dîner","Collation"].map(c=><button key={c} onClick={()=>setRecipeFilter(c)} style={{...SC.btn,padding:"2px 7px",fontSize:9,whiteSpace:"nowrap",flex:"0 0 auto",background:recipeFilter===c?"#8b5cf6":"#1e1e2e",color:recipeFilter===c?"#fff":"#555",border:`1px solid ${recipeFilter===c?"#8b5cf6":"#2a2a4e"}`}}>{c}</button>)}
+                  </div>
+                  <div style={{maxHeight:320,overflowY:"auto"}}>
+                    {RECIPE_DB.filter(r=>{const mc=recipeFilter==="Tous"||r.cat===recipeFilter;const ms=!recipeSearch||r.name.toLowerCase().includes(recipeSearch.toLowerCase());return mc&&ms;}).map(recipe=>(
+                      <div key={recipe.id} style={{borderTop:"1px solid #1a1a2e",padding:"7px 2px"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div style={{display:"flex",gap:6,alignItems:"center",flex:1}}>
+                            <span style={{fontSize:16}}>{recipe.emoji}</span>
+                            <div style={{flex:1}}><div style={{color:"#ddd",fontSize:10,fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{recipe.name}</div><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>{recipe.cal}kcal · P:{recipe.p}g · {recipe.time}</div></div>
+                          </div>
+                          <div style={{display:"flex",gap:4,flexShrink:0}}>
+                            <button onClick={()=>setExpandedRecipe(expandedRecipe===recipe.id?null:recipe.id)} style={{background:"#1a1a2e",border:"1px solid #2a2a4e",borderRadius:4,color:"#666",fontSize:8,cursor:"pointer",padding:"2px 5px"}}>👁</button>
+                            <button onClick={()=>addRecipeToMeal(recipe,activeMeal)} style={{background:"#8b5cf6",color:"#fff",border:"none",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontSize:11,fontWeight:700}}>+</button>
+                          </div>
+                        </div>
+                        {expandedRecipe===recipe.id&&(
+                          <div style={{background:"#0f0f1a",borderRadius:9,padding:"8px 9px",marginTop:6}}>
+                            <div style={{color:"#666",fontSize:9,fontFamily:"'DM Sans',sans-serif",marginBottom:4}}>INGRÉDIENTS</div>
+                            {recipe.ingredients.map((ing,i)=><div key={i} style={{color:"#bbb",fontSize:10,fontFamily:"'DM Sans',sans-serif",padding:"1px 0"}}>• {ing}</div>)}
+                            <div style={{color:"#666",fontSize:9,fontFamily:"'DM Sans',sans-serif",marginBottom:3,marginTop:6}}>ÉTAPES</div>
+                            {recipe.steps.map((s,i)=><div key={i} style={{display:"flex",gap:5,padding:"2px 0"}}><span style={{background:"#8b5cf6",color:"#fff",borderRadius:"50%",width:13,height:13,display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,flexShrink:0,marginTop:1}}>{i+1}</span><span style={{color:"#bbb",fontSize:9,fontFamily:"'DM Sans',sans-serif",lineHeight:1.4}}>{s}</span></div>)}
+                            {recipe.tip&&<div style={{background:"#1a1a2e",borderRadius:7,padding:"5px 7px",marginTop:5,color:"#a855f7",fontSize:9,fontFamily:"'DM Sans',sans-serif",fontStyle:"italic"}}>💡 {recipe.tip}</div>}
+                            <div style={{marginTop:7}}><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif",marginBottom:3}}>Ajouter à :</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{MEALS.map(m=><button key={m} onClick={()=>addRecipeToMeal(recipe,m)} style={{...SC.btn,padding:"3px 7px",fontSize:8,background:activeMeal===m?"#8b5cf6":"#1e1e2e",color:activeMeal===m?"#fff":"#555",border:`1px solid ${activeMeal===m?"#8b5cf6":"#2a2a4e"}`}}>{m}</button>)}</div></div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>)}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    
+      // ─── WORKOUT ───
+      const updateSet=(exId,si,field,val)=>{
+        setWkExercises(prev=>prev.map(ex=>ex.id!==exId?ex:{...ex,sets:ex.sets.map((s,i)=>i===si?{...s,[field]:val}:s)}));
+        if(val)showToast(CONGRATS_MSGS[Math.floor(Math.random()*CONGRATS_MSGS.length)]);
+      };
+      const saveWorkout=async()=>{
+        const session={id:Date.now(),date:wkDate,muscle:wkMuscle,notes:wkNotes,exercises:wkExercises.map(ex=>({name:ex.name||"Exercice",sets:ex.sets.filter(s=>s.r||s.w)})),totalReps:wkTotalReps,totalVol:wkTotalVol};
+        const newH=[session,...workoutHistory];
+        setWorkoutHistory(newH);await saveHistory(newH);
+        setWkExercises([{id:Date.now(),name:"",sets:[{r:"",w:""},{r:"",w:""},{r:"",w:""},{r:"",w:""},{r:"",w:""}]}]);
+        setWkNotes("");showToast("🏆 Séance enregistrée ! Excellent travail !");
+      };
+    
+      const renderWorkout=()=>(
+        <div style={SC.tab}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
+            <div style={SC.h2}>💪 Musculation</div>
+            <button onClick={()=>setShowHistory(!showHistory)} style={{...SC.btn,padding:"4px 11px",fontSize:10,background:showHistory?"#8b5cf6":"#1e1e2e",color:showHistory?"#fff":"#888",border:"1px solid #333"}}>{showHistory?"✏️ Séance":"📋 Historique"}</button>
+          </div>
+    
+          {showHistory?(
+            <div>
+              {workoutHistory.length===0&&<div style={{...SC.card,textAlign:"center",padding:"24px 14px"}}><div style={{fontSize:32,marginBottom:6}}>📋</div><div style={{color:"#555",fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>Aucune séance enregistrée</div></div>}
+              {workoutHistory.map(w=>(
+                <div key={w.id} style={SC.card}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                    <div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color:"#fff",letterSpacing:1}}>{w.muscle}</div><div style={{color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>{w.date}</div></div>
+                    <div style={{display:"flex",gap:5}}>
+                      {[{l:"Reps",v:w.totalReps,c:"#8b5cf6"},{l:"kg",v:w.totalVol,c:"#10b981"}].map(x=><div key={x.l} style={{background:"#1a1a2e",borderRadius:7,padding:"4px 8px",textAlign:"center"}}><div style={{color:x.c,fontSize:11,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{x.v}</div><div style={{color:"#444",fontSize:7,fontFamily:"'DM Sans',sans-serif"}}>{x.l}</div></div>)}
+                    </div>
+                  </div>
+                  <div style={{overflowX:"auto"}}>
+                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>
+                      <thead><tr>
+                        <th style={{color:"#555",textAlign:"left",padding:"3px 4px",borderBottom:"1px solid #1e1e2e",minWidth:80}}>Exercice</th>
+                        <th style={{color:"#555",textAlign:"left",padding:"3px 4px",borderBottom:"1px solid #1e1e2e",minWidth:28}}>Série</th>
+                        {Array.from({length:Math.max(0,...(w.exercises||[]).map(e=>e.sets.length))},(_,i)=><th key={i} style={{color:"#555",textAlign:"center",padding:"3px 4px",borderBottom:"1px solid #1e1e2e",minWidth:36}}>{i+1}</th>)}
+                      </tr></thead>
+                      <tbody>
+                        {(w.exercises||[]).map((ex,ei)=>[
+                          <tr key={`${ei}r`}><td rowSpan={2} style={{color:"#ccc",padding:"3px 4px",verticalAlign:"middle",borderBottom:"1px solid #111",fontSize:8}}>{ex.name}</td><td style={{color:"#555",padding:"2px 4px",fontSize:7}}>Rep</td>{ex.sets.map((s,si)=><td key={si} style={{color:"#fff",textAlign:"center",padding:"2px 4px"}}>{s.r||"—"}</td>)}</tr>,
+                          <tr key={`${ei}w`}><td style={{color:"#555",padding:"2px 4px",fontSize:7,borderBottom:"1px solid #1a1a2e"}}>Poids</td>{ex.sets.map((s,si)=><td key={si} style={{color:"#8b5cf6",textAlign:"center",padding:"2px 4px",borderBottom:"1px solid #1a1a2e"}}>{s.w?`${s.w}kg`:"—"}</td>)}</tr>
+                        ])}
+                      </tbody>
+                    </table>
+                  </div>
+                  {w.notes&&<div style={{marginTop:5,color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif",fontStyle:"italic"}}>📝 {w.notes}</div>}
+                  <button onClick={()=>{const nh=workoutHistory.filter(x=>x.id!==w.id);setWorkoutHistory(nh);saveHistory(nh);}} style={{marginTop:6,background:"none",border:"1px solid #2a1a1a",borderRadius:6,color:"#555",fontSize:9,cursor:"pointer",padding:"2px 10px",fontFamily:"'DM Sans',sans-serif"}}>🗑 Supprimer</button>
+                </div>
+              ))}
+            </div>
+          ):(
+            <div>
+              {/* Date + Groupe musculaire */}
+              <div style={{...SC.card,padding:"10px"}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  <div>
+                    <label style={{color:"#666",fontSize:9,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,display:"block",marginBottom:3}}>DATE</label>
+                    <input type="date" value={wkDate} onChange={e=>setWkDate(e.target.value)} style={{...SC.input,marginBottom:0,fontSize:11,colorScheme:"dark"}}/>
+                  </div>
+                  <div>
+                    <label style={{color:"#666",fontSize:9,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,display:"block",marginBottom:3}}>GROUPE MUSCULAIRE</label>
+                    <select value={wkMuscle} onChange={e=>{setWkMuscle(e.target.value);setWkEquip(null);}} style={{...SC.input,marginBottom:0,fontSize:10,appearance:"none",cursor:"pointer"}}>
+                      {MUSCLE_GROUPS.map(m=><option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+    
+              {/* Equipment sub-tabs */}
+              <div style={{display:"flex",gap:5,overflowX:"auto",marginBottom:9,paddingBottom:2}}>
+                {equipGroups.map(eq=><button key={eq} onClick={()=>setWkEquip(eq)} style={{...SC.btn,padding:"4px 9px",fontSize:9,whiteSpace:"nowrap",flex:"0 0 auto",background:currentEquip===eq?"#8b5cf6":"#111",color:currentEquip===eq?"#fff":"#666",border:`1px solid ${currentEquip===eq?"#8b5cf6":"#222"}`}}>{eq}</button>)}
+              </div>
+    
+              {/* Exercises */}
+              {wkExercises.map((ex)=>(
+                <div key={ex.id} style={{...SC.card,padding:"10px 8px"}}>
+                  <div style={{display:"flex",gap:6,marginBottom:7,alignItems:"center"}}>
+                    <select value={ex.name} onChange={e=>setWkExercises(p=>p.map(x=>x.id===ex.id?{...x,name:e.target.value}:x))} style={{...SC.input,marginBottom:0,flex:1,fontSize:10,appearance:"none"}}>
+                      <option value="">— Choisir un exercice —</option>
+                      {exerciseList.map(e=><option key={e} value={e}>{e}</option>)}
+                    </select>
+                    {wkExercises.length>1&&<button onClick={()=>setWkExercises(p=>p.filter(x=>x.id!==ex.id))} style={{background:"none",border:"1px solid #2a1a1a",borderRadius:5,color:"#ef4444",fontSize:11,cursor:"pointer",padding:"4px 7px"}}>✕</button>}
+                  </div>
+                  <div style={{overflowX:"auto"}}>
+                    <table style={{width:"100%",borderCollapse:"separate"}}>
+                      <thead><tr>
+                        <th style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif",textAlign:"left",padding:"2px 3px",minWidth:36}}>Série</th>
+                        {ex.sets.map((_,si)=><th key={si} style={{padding:"2px 2px",minWidth:48}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:2}}><span style={{color:"#666",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>{si+1}</span>{ex.sets.length>1&&<button onClick={()=>setWkExercises(p=>p.map(x=>x.id===ex.id?{...x,sets:x.sets.filter((_,i)=>i!==si)}:x))} style={{background:"none",border:"none",color:"#333",cursor:"pointer",fontSize:9,padding:0}}>×</button>}</div></th>)}
+                        <th style={{minWidth:22}}><button onClick={()=>setWkExercises(p=>p.map(x=>x.id===ex.id?{...x,sets:[...x.sets,{r:"",w:""}]}:x))} style={{background:"#1a0f2e",border:"1px solid #8b5cf6",color:"#8b5cf6",borderRadius:4,width:18,height:18,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>+</button></th>
+                      </tr></thead>
+                      <tbody>
+                        {[{field:"r",label:"Rep",color:"#fff"},{field:"w",label:"Poids",color:"#8b5cf6"}].map(row=>(
+                          <tr key={row.field}><td style={{color:"#666",fontSize:8,fontFamily:"'DM Sans',sans-serif",padding:"2px 3px"}}>{row.label}</td>
+                            {ex.sets.map((s,si)=><td key={si} style={{padding:"2px 2px"}}><input type="number" placeholder="—" value={s[row.field]} onChange={e=>updateSet(ex.id,si,row.field,e.target.value)} style={{width:"100%",background:"#1a1a2e",border:"1px solid #2a2a4e",borderRadius:4,color:row.color,fontSize:10,padding:"4px 2px",textAlign:"center",fontFamily:"'DM Sans',sans-serif"}}/></td>)}
+                            <td/>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+              <button onClick={()=>setWkExercises(p=>[...p,{id:Date.now(),name:"",sets:[{r:"",w:""},{r:"",w:""},{r:"",w:""},{r:"",w:""},{r:"",w:""}]}])} style={{...SC.btn,width:"100%",background:"#111",color:"#555",border:"1px dashed #2a2a4e",marginBottom:8,fontSize:11}}>+ Ajouter un exercice</button>
+              <div style={SC.card}><label style={{color:"#666",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,display:"block",marginBottom:4}}>NOTES</label><textarea value={wkNotes} onChange={e=>setWkNotes(e.target.value)} placeholder="Commentaires sur la séance..." style={{...SC.input,height:60,resize:"vertical",marginBottom:0}}/></div>
+              <div style={{...SC.card,display:"grid",gridTemplateColumns:"1fr 1fr",textAlign:"center",padding:"12px 8px"}}>
+                <div style={{borderRight:"1px solid #1e1e2e"}}><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,marginBottom:2}}>TOTAL RÉPÉTITIONS</div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,color:"#fff",letterSpacing:2}}>{wkTotalReps}</div></div>
+                <div><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,marginBottom:2}}>VOLUME TOTAL</div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,color:"#8b5cf6",letterSpacing:2}}>{wkTotalVol}</div><div style={{color:"#444",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>kg soulevés</div></div>
+              </div>
+              <button onClick={saveWorkout} style={{...SC.btn,width:"100%",background:"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontWeight:700,fontSize:13,padding:"12px",letterSpacing:0.5}}>💾 Enregistrer la séance</button>
+            </div>
+          )}
+        </div>
+      );
+    
+      // ─── RECIPES (AI) ───
+      const renderRecipes=()=>(
+        <div style={SC.tab}>
+          <div style={{...SC.h2,marginBottom:3}}>🍽️ Recettes IA</div>
+          <div style={{color:"#555",fontSize:10,fontFamily:"'DM Sans',sans-serif",marginBottom:10}}>Génère des recettes selon tes objectifs et calories restantes</div>
+          <div style={SC.card}>
+            <div style={{...SC.h3,marginBottom:8}}>Paramètres</div>
+            <div style={{display:"flex",gap:4,marginBottom:9,flexWrap:"wrap"}}>
+              {["standard","végétarien","végan","sans gluten","sans lactose"].map(d=><button key={d} onClick={()=>setRecipeDiet(d)} style={{...SC.btn,padding:"3px 8px",fontSize:9,background:recipeDiet===d?"#8b5cf6":"#1e1e2e",color:recipeDiet===d?"#fff":"#555",border:`1px solid ${recipeDiet===d?"#8b5cf6":"#2a2a3e"}`}}>{d}</button>)}
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:9}}>
+              {[{l:"Restant",v:`${remaining} kcal`,c:"#8b5cf6"},{l:"Objectif",v:goalLabel,c:"#a855f7"}].map(x=><div key={x.l} style={{flex:1,background:"#1a1a2e",borderRadius:8,padding:"7px",textAlign:"center"}}><div style={{color:x.c,fontSize:12,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{x.v}</div><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>{x.l}</div></div>)}
+            </div>
+            <button onClick={async()=>{setAiRecipeLoading(true);try{const t=await callAI(`Tu es coach nutrition expert. Génère 3 recettes fitness en JSON uniquement (sans markdown). Objectif: ${goalLabel}, calories restantes: ${remaining} kcal, régime: ${recipeDiet}. {"recipes":[{"name":"Nom","emoji":"🥗","time":"20 min","difficulty":"Facile","calories":number,"protein":number,"carbs":number,"fat":number,"fiber":number,"ingredients":["200g de..."],"steps":["Étape 1..."],"tip":"astuce nutrition"}]}`);setAiRecipeResult(JSON.parse(t.replace(/```json|```/g,"").trim()));}catch(e){setAiRecipeResult({error:true});}setAiRecipeLoading(false);}} disabled={aiRecipeLoading} style={{...SC.btn,width:"100%",background:aiRecipeLoading?"#2a1a4e":"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontWeight:700}}>
+              {aiRecipeLoading?"🤖 Génération en cours...":"✨ Générer 3 recettes IA"}
+            </button>
+          </div>
+          {aiRecipeResult?.error&&<div style={{...SC.card,color:"#ef4444",textAlign:"center",fontSize:11}}>Erreur. Réessaie !</div>}
+          {aiRecipeResult?.recipes?.map((r,i)=>(
+            <div key={i} style={{...SC.card,marginTop:7}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                <div style={{flex:1}}><div style={{fontSize:18,marginBottom:2}}>{r.emoji}</div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,color:"#fff",letterSpacing:1}}>{r.name}</div><div style={{color:"#555",fontSize:9,fontFamily:"'DM Sans',sans-serif"}}>{r.time} · {r.difficulty}</div></div>
+                <div style={{background:"#1a0f2e",borderRadius:8,padding:"5px 9px",textAlign:"center"}}><div style={{color:"#8b5cf6",fontSize:14,fontWeight:800,fontFamily:"'Bebas Neue',sans-serif"}}>{r.calories}</div><div style={{color:"#555",fontSize:7,fontFamily:"'DM Sans',sans-serif"}}>kcal</div></div>
+              </div>
+              <div style={{display:"flex",gap:6,marginBottom:8}}>
+                {[{l:"Prot.",v:`${r.protein}g`,c:"#8b5cf6"},{l:"Glu.",v:`${r.carbs}g`,c:"#3b82f6"},{l:"Lip.",v:`${r.fat}g`,c:"#f59e0b"}].map(m=><div key={m.l} style={{flex:1,background:"#0f0f1a",borderRadius:6,padding:"4px",textAlign:"center"}}><div style={{color:m.c,fontSize:11,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{m.v}</div><div style={{color:"#444",fontSize:7,fontFamily:"'DM Sans',sans-serif"}}>{m.l}</div></div>)}
+              </div>
+              <div style={{marginBottom:6}}><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,marginBottom:3}}>INGRÉDIENTS</div>{r.ingredients?.map((ing,j)=><div key={j} style={{color:"#bbb",fontSize:10,fontFamily:"'DM Sans',sans-serif",padding:"1px 0"}}>• {ing}</div>)}</div>
+              <div style={{marginBottom:6}}><div style={{color:"#555",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,marginBottom:3}}>PRÉPARATION</div>{r.steps?.map((s,j)=><div key={j} style={{display:"flex",gap:5,padding:"2px 0"}}><div style={{background:"#8b5cf6",color:"#fff",borderRadius:"50%",width:13,height:13,display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,fontWeight:700,flexShrink:0}}>{j+1}</div><div style={{color:"#bbb",fontSize:10,fontFamily:"'DM Sans',sans-serif",lineHeight:1.4}}>{s}</div></div>)}</div>
+              {r.tip&&<div style={{background:"#0f0f1a",borderRadius:6,padding:"5px 8px",color:"#a855f7",fontSize:9,fontFamily:"'DM Sans',sans-serif",fontStyle:"italic",marginBottom:7}}>💡 {r.tip}</div>}
+              <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{MEALS.map(m=><button key={m} onClick={()=>{addRecipeToMeal({...r,p:r.protein,c:r.carbs,f:r.fat,id:`ai${i}`,emoji:r.emoji||"🍽️"},m);}} style={{...SC.btn,padding:"3px 7px",fontSize:8,background:"#1a0f2e",color:"#8b5cf6",border:"1px solid #2a1a4e"}}>+ {m}</button>)}</div>
+            </div>
+          ))}
+        </div>
+      );
+    
+      // ─── ACCOUNT ───
+      const renderAccount=()=>{
+        const ep=editProf||profile;
+        const em=editMac||effectiveMacros||{tdee:0,protein:0,carbs:0,fat:0};
+        const computed=calcTDEE(ep);
+        return(
+          <div style={SC.tab}>
+            <div style={{...SC.h2,marginBottom:3}}>👤 Mon Compte</div>
+            <div style={{color:"#555",fontSize:10,fontFamily:"'DM Sans',sans-serif",marginBottom:10}}>Profil, objectifs et macros personnalisés</div>
+            {accSaved&&<div style={{background:"#0f2e1a",border:"1px solid #10b981",borderRadius:10,padding:"7px 12px",marginBottom:8,color:"#10b981",fontSize:10,fontFamily:"'DM Sans',sans-serif",textAlign:"center"}}>✅ Modifications enregistrées !</div>}
+            <div style={SC.card}>
+              <div style={{...SC.h3,marginBottom:8}}>Informations personnelles</div>
+              {[{l:"Prénom",k:"name",t:"text"},{l:"Email",k:"email",t:"email"},{l:"Mot de passe",k:"password",t:"password"}].map(f=>(
+                <div key={f.k} style={{marginBottom:7}}><label style={{color:"#666",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5,display:"block",marginBottom:3}}>{f.l.toUpperCase()}</label><input type={f.t} value={ep[f.k]||""} onChange={e=>setEditProf(p=>({...(p||ep),[f.k]:e.target.value}))} style={{...SC.input,marginBottom:0}}/></div>
+              ))}
+              <div style={{display:"flex",gap:8,marginTop:2}}>{[{v:"M",l:"Homme"},{v:"F",l:"Femme"}].map(s=><button key={s.v} onClick={()=>setEditProf(p=>({...(p||ep),sex:s.v}))} style={{...SC.btn,flex:1,background:ep.sex===s.v?"#8b5cf6":"#1e1e2e",color:ep.sex===s.v?"#fff":"#888",fontSize:11}}>{s.l}</button>)}</div>
+            </div>
+            <div style={SC.card}>
+              <div style={{...SC.h3,marginBottom:8}}>Stats physiques</div>
+              {[{l:"Âge",k:"age",u:"ans",min:10,max:80},{l:"Poids",k:"weight",u:"kg",min:30,max:200},{l:"Taille",k:"height",u:"cm",min:140,max:220}].map(f=>(
+                <div key={f.k} style={{marginBottom:10}}><label style={{color:"#666",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>{f.l.toUpperCase()}</label><div style={{display:"flex",alignItems:"center",gap:8,marginTop:3}}><input type="range" min={f.min} max={f.max} value={ep[f.k]||f.min} onChange={e=>setEditProf(p=>({...(p||ep),[f.k]:+e.target.value}))} style={{flex:1,accentColor:"#8b5cf6"}}/><span style={{color:"#fff",fontSize:13,fontWeight:700,fontFamily:"'Bebas Neue',sans-serif",minWidth:48,textAlign:"right"}}>{ep[f.k]} <span style={{fontSize:8,color:"#555"}}>{f.u}</span></span></div></div>
+              ))}
+            </div>
+            <div style={SC.card}><div style={{...SC.h3,marginBottom:8}}>Objectif</div>{GOALS.map(g=><div key={g.id} onClick={()=>setEditProf(p=>({...(p||ep),goal:g.id}))} style={{...SC.card,background:ep.goal===g.id?"#1a0f2e":"#0f0f0f",border:`1.5px solid ${ep.goal===g.id?"#8b5cf6":"#1e1e2e"}`,cursor:"pointer",marginBottom:5,padding:"7px 10px"}}><div style={{display:"flex",alignItems:"center",gap:8}}><span>{g.icon}</span><span style={{color:"#ddd",fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>{g.label}</span>{ep.goal===g.id&&<span style={{marginLeft:"auto",color:"#8b5cf6"}}>✓</span>}</div></div>)}</div>
+            <div style={SC.card}><div style={{...SC.h3,marginBottom:8}}>Niveau d'activité</div>{ACTIVITY.map(a=><div key={a.id} onClick={()=>setEditProf(p=>({...(p||ep),activity:a.id}))} style={{...SC.card,background:ep.activity===a.id?"#1a0f2e":"#0f0f0f",border:`1.5px solid ${ep.activity===a.id?"#8b5cf6":"#1e1e2e"}`,cursor:"pointer",marginBottom:4,padding:"6px 10px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{color:"#ddd",fontSize:10,fontFamily:"'DM Sans',sans-serif"}}>{a.label}</div><div style={{color:"#444",fontSize:8,fontFamily:"'DM Sans',sans-serif"}}>{a.desc}</div></div>{ep.activity===a.id&&<span style={{color:"#8b5cf6"}}>✓</span>}</div></div>)}</div>
+            <div style={{...SC.card,border:"1.5px solid #2a1a4e"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}><div style={SC.h3}>⚙️ Macros personnalisés</div><button onClick={()=>{const t=calcTDEE(ep);setEditMac({...t});setCustomMacros(null);setTargets(t);}} style={{background:"none",border:"1px solid #333",borderRadius:6,color:"#555",fontSize:8,cursor:"pointer",padding:"2px 7px",fontFamily:"'DM Sans',sans-serif"}}>↺ Reset</button></div>
+              <div style={{color:"#444",fontSize:8,fontFamily:"'DM Sans',sans-serif",marginBottom:10}}>Auto: {computed.tdee}kcal · P:{computed.protein}g G:{computed.carbs}g L:{computed.fat}g</div>
+              {[{l:"Calories (kcal)",k:"tdee",min:1000,max:6000,step:50,c:"#fff"},{l:"Protéines (g)",k:"protein",min:50,max:400,step:5,c:"#8b5cf6"},{l:"Glucides (g)",k:"carbs",min:50,max:600,step:5,c:"#3b82f6"},{l:"Lipides (g)",k:"fat",min:20,max:200,step:2,c:"#f59e0b"}].map(f=>(
+                <div key={f.k} style={{marginBottom:10}}><label style={{color:"#666",fontSize:8,fontFamily:"'DM Sans',sans-serif",letterSpacing:0.5}}>{f.l.toUpperCase()}</label><div style={{display:"flex",alignItems:"center",gap:7,marginTop:3}}><input type="range" min={f.min} max={f.max} step={f.step} value={em[f.k]||f.min} onChange={e=>setEditMac(m=>({...(m||em),[f.k]:+e.target.value}))} style={{flex:1,accentColor:f.c}}/><input type="number" value={em[f.k]||""} onChange={e=>setEditMac(m=>({...(m||em),[f.k]:+e.target.value}))} style={{...SC.input,width:56,padding:"2px 5px",fontSize:10,marginBottom:0,color:f.c,textAlign:"center"}}/></div></div>
+              ))}
+              <div style={{background:"#0f0f1a",borderRadius:8,padding:"7px 10px"}}><div style={{color:"#444",fontSize:8,fontFamily:"'DM Sans',sans-serif",marginBottom:4}}>Répartition</div><div style={{display:"flex",gap:5}}>{[{l:"Prot.",v:`${em.protein}g`,c:"#8b5cf6",pct:Math.round(em.protein*4/(em.tdee||1)*100)},{l:"Glu.",v:`${em.carbs}g`,c:"#3b82f6",pct:Math.round(em.carbs*4/(em.tdee||1)*100)},{l:"Lip.",v:`${em.fat}g`,c:"#f59e0b",pct:Math.round(em.fat*9/(em.tdee||1)*100)}].map(m=><div key={m.l} style={{flex:1,textAlign:"center"}}><div style={{color:m.c,fontSize:10,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>{m.v}</div><div style={{color:"#333",fontSize:7,fontFamily:"'DM Sans',sans-serif"}}>{m.pct}%</div></div>)}</div></div>
+            </div>
+            <button onClick={()=>{if(editProf)setProfile({...profile,...editProf});if(editMac){setCustomMacros(editMac);setTargets(editMac);}setAccSaved(true);setTimeout(()=>setAccSaved(false),2500);}} style={{...SC.btn,width:"100%",background:"linear-gradient(135deg,#7c3aed,#a855f7)",color:"#fff",fontWeight:700,fontSize:12,padding:"12px",marginBottom:20}}>💾 Enregistrer les modifications</button>
+          </div>
+        );
+      };
+    
+      const TABS=[{id:"dashboard",icon:"🏠",label:"Accueil"},{id:"nutrition",icon:"🥗",label:"Nutrition"},{id:"workout",icon:"💪",label:"Séance"},{id:"recipes",icon:"🍽️",label:"Recettes"},{id:"account",icon:"👤",label:"Compte"}];
+    
+      return(
+        <div style={SC.app}>
+          <style>{CSS}</style>
+          {toast&&<Toast msg={toast} onClose={()=>setToast(null)}/>}
+          {showScanner&&<BarcodeScanner onResult={p=>{setScannedProduct(p);setShowScanner(false);setAddTab("scan");setAddingFood(true);}} onClose={()=>setShowScanner(false)}/>}
+          <div style={{maxWidth:500,width:"100%",margin:"0 auto",height:"100vh",display:"flex",flexDirection:"column"}}>
+            <div style={{padding:"7px 12px 5px",borderBottom:"1px solid #1a1a2e",background:"#0a0a0a",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#fff",letterSpacing:3}}>TRACKLETICS</div>
+              <div style={{width:3,height:3,borderRadius:"50%",background:"#8b5cf6"}}/>
+              <div style={{fontSize:9,color:"#555",fontFamily:"'DM Sans',sans-serif"}}>{new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}</div>
+            </div>
+            <div style={{flex:1,overflowY:"auto",background:"#0a0a0a"}}>
+              {tab==="dashboard"&&renderDash()}
+              {tab==="nutrition"&&renderNutrition()}
+              {tab==="workout"&&renderWorkout()}
+              {tab==="recipes"&&renderRecipes()}
+              {tab==="account"&&renderAccount()}
+            </div>
+            <div style={{display:"flex",background:"#0d0d0d",borderTop:"1px solid #1a1a2e",flexShrink:0}}>
+              {TABS.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,background:"none",border:"none",padding:"7px 1px 4px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,borderTop:`2px solid ${tab===t.id?"#8b5cf6":"transparent"}`,transition:"border-color 0.2s"}}><span style={{fontSize:15}}>{t.icon}</span><span style={{fontSize:6.5,color:tab===t.id?"#8b5cf6":"#444",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:0.2}}>{t.label.toUpperCase()}</span></button>)}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    const SC={app:{background:"#0a0a0a",minHeight:"100vh",color:"#fff"},stepWrap:{display:"flex",flexDirection:"column",gap:5},tab:{padding:"11px 11px 22px"},h2:{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#fff",letterSpacing:2,marginBottom:3},h3:{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:"#ccc",letterSpacing:1},p:{color:"#666",fontSize:12,fontFamily:"'DM Sans',sans-serif",marginBottom:8},card:{background:"#111",border:"1px solid #1e1e2e",borderRadius:12,padding:"11px",marginBottom:8},btn:{border:"none",borderRadius:8,padding:"9px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:600,transition:"all 0.15s",letterSpacing:0.3},input:{background:"#1a1a2e",border:"1px solid #2a2a4e",borderRadius:8,padding:"8px 10px",color:"#fff",fontSize:12,width:"100%",marginBottom:5,fontFamily:"'DM Sans',sans-serif"}};
+    const CSS=`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');*{box-sizing:border-box;margin:0;padding:0}input[type=range]{height:4px;border-radius:4px;background:#2a2a2a}::-webkit-scrollbar{width:4px;background:#0a0a0a}::-webkit-scrollbar-thumb{background:#333;border-radius:4px}input:focus,select:focus,textarea:focus{outline:2px solid #8b5cf633!important;border-color:#8b5cf6!important}button:active{transform:scale(0.97)}select option{background:#1a1a2e;color:#fff}@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`;
+    
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Trackletics />);
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE = 'trackletics-v1';
+        self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.add(location.href))));
+        self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob));
+    }
+  </script>
+</body>
+</html>
